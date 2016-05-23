@@ -494,10 +494,3 @@ class BasicRouter(Router):
                 return {"Error": "Router object not connect to a router."}
         except Exception, e:
             return {"Error": e}
-
-
-
-
-
-
-
