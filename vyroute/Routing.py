@@ -1,28 +1,27 @@
 # author=hochikong
-import StaticRoute
+from vyroute.basic_function import RIPRoute
+from vyroute.basic_function import StaticRoute
 
 
 class BasicRouting(object):
-    def static_routing(self):
+    def static_routing(self,data):
         pass
 
-    def rip_routing(self):
+    def rip_routing(self,data):
         pass
 
-    def ospf_routing(self):
+    def ospf_routing(self,data):
         pass
 
 
 class Routing(BasicRouting):
-    def __init__(self, datafile):
-        """Initial member self.file.
-
-        :param datafile: a string
-        """
-        self.file = datafile
-
     def static_routing(self, data):
         return StaticRoute.staticroute(data)
+
+    def rip_routing(self,data):
+        return RIPRoute.riproute(data)
+
+
 
 
 

@@ -5,6 +5,7 @@ setup(
     name="vyroute",
     version="0.1",
     packages=find_packages(),
+    install_requires=['Exscript'],
 
     description="A library for VyOS routing setting",
     long_description="A library for VyOS routing setting",

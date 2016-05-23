@@ -16,7 +16,7 @@ def staticroute(data):
     :param data: a python dictionary
     :return:a python dictionary
     """
-    basic_configuration = "set protocols static route %s next-hop %s distance %s"
+    static_basic_configuration = "set protocols static route %s next-hop %s distance %s"
 
     try:
         stringlist = list(data['router'])
@@ -29,25 +29,25 @@ def staticroute(data):
         conn.connect(address)
         conn.login(account)
 
-# configure mode
+        # configure mode
         conn.execute("configure")
 
-# configure static route
+        # configure static router
         for i in data['config']:
-            conn.execute(basic_configuration % (i['target'],
+            conn.execute(static_basic_configuration % (i['target'],
                                                 i['next-hop'],
                                                 i['distance']))
 
-# commit configuration
+        # commit configuration
         conn.execute("commit")
 
-# save configuration
+        # save configuration
         conn.execute("save")
 
-# exit configure mode
+        # exit configure mode
         conn.execute("exit")
 
-# close connection
+        # close connection
         conn.close(force=True)
 
         return {"Result": "Configured successfully"}
