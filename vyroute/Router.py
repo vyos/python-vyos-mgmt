@@ -39,6 +39,9 @@ class Router(object):
     def lo(self, data):
         pass
 
+    def delete_route(self, data):
+        pass
+
     # Basic VyOS configuration func
     def configure(self):
         pass
@@ -82,7 +85,7 @@ class BasicRouter(Router):
         :return: a python dictionary
         """
         try:
-            if self.conn.connect(self.address) == "True":
+            if self.conn.connect(self.address) is True:
                 self.conn.login(self.account)
                 self.status["object"] = "login"
                 return {"Result": "Login successfully."}

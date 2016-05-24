@@ -3,12 +3,11 @@ from Exscript.protocols import SSH2
 from Exscript import Account
 
 
-def deleteroute(data):
+def deleteroute(obj, data):
     """This method provide a router configuration delete function
 
     Parameter data example:
-    {'router':'vyos@172.16.77.188','passwd':'vyos',
-    'config':'rip'
+    {'config':'rip'/'static'/'ospf'/'all'
     }
 
     WARNING!
@@ -17,41 +16,27 @@ def deleteroute(data):
     If you do not want your setting disappear,you can delete router configuration manually or rewrite
     this func.
 
+    :param obj: a connection object
     :param data: a python dictionary
     :return: a python dictionary
     """
     delete_basic_configuration = "delete protocols %s"
+    delete_all_protocols = "delete protocols"
 
     try:
-        stringlist = list(data['router'])
-        divi = stringlist.index('@')
-        user = ''.join(stringlist[:divi])
-        passwd = data['passwd']
-        address = ''.join(stringlist[divi + 1:])
-        account = Account(user, passwd)
-        conn = SSH2()
-        conn.connect(address)
-        conn.login(account)
-
-        # configure mode
-        conn.execute("configure")
-
-        # delete specific configuration
-        conn.execute(delete_basic_configuration % data['config'])
-
-        # commit configuration
-        conn.execute("commit")
-
-        # save configuration
-        conn.execute("save")
-
-        # exit configure mode
-        conn.execute("exit")
-
-        # close connection
-        conn.close(force=True)
-
-        return {"Result": "Delete successfully"}
-
+        if data['config'] == "all":
+            obj.execute(delete_all_protocols)
+            return {"Result": "Delete successfully."}
+        elif data['config'] == 'rip':
+            obj.execute(delete_basic_configuration % 'rip')
+            return {"Result": "Delete successfully."}
+        elif data['config'] == 'static':
+            obj.execute(delete_basic_configuration % 'static')
+            return {"Result": "Delete successfully."}
+        elif data['config'] == 'ospf':
+            obj.execute(delete_basic_configuration % 'ospf')
+            return {"Result": "Delete successfully."}
+        else:
+            return {"Error": "Nonsupport protocols type."}
     except Exception, e:
         return {"Error": e}
