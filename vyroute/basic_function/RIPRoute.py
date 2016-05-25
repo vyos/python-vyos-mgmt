@@ -1,4 +1,4 @@
-# author=hochikong
+# author=Hochikong
 def riproute(obj, data):
     """This method provide a RIP protocols router configuration function
 
@@ -19,4 +19,3 @@ def riproute(obj, data):
         return {"Result": "Configured successfully"}
     except Exception, e:
         return {"Error": e}
-

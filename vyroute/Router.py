@@ -1,4 +1,4 @@
-# author=hochikong
+# author=Hochikong
 from Exscript.protocols import SSH2
 from Exscript import Account
 from vyroute.basic_function import Modifylo
@@ -210,6 +210,10 @@ class BasicRouter(Router):
 
     def lo(self, data):
         """Modify a router loopback address
+
+        Parameter data example:
+        {'config':'1.1.1.1/32'
+        }
 
         :param data: a python dictionary
         :return: a python dictionary

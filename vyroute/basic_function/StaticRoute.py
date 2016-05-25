@@ -1,4 +1,4 @@
-# author=hochikong
+# author=Hochikong
 def staticroute(obj, data):
     """This method provide a basic static router configuration function
 
@@ -20,26 +20,3 @@ def staticroute(obj, data):
         return {"Result": "Configured successfully"}
     except Exception, e:
         return {'Error': e}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

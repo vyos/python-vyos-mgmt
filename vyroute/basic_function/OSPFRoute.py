@@ -1,4 +1,4 @@
-# author=hochikong
+# author=Hochikong
 def ospfarea(obj, data):
     """This method provide a OSPF area configuration function
 
@@ -90,7 +90,7 @@ def ospf_default_route(obj, data):
     """
     default_route_configuration = {"0": "set protocols ospf default-information originate always",
                                    "1": "set protocols ospf default-information originate metric %s",
-                                   "2": "set protocols ospf default-information originate metric-type %",
+                                   "2": "set protocols ospf default-information originate metric-type %s",
                                    }
     try:
         obj.execute(default_route_configuration['0'])

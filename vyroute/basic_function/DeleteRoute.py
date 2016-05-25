@@ -1,4 +1,4 @@
-# author=hochikong
+# author=Hochikong
 from Exscript.protocols import SSH2
 from Exscript import Account
 

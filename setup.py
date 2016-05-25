@@ -1,4 +1,4 @@
-#author=hochikong
+# author=Hochikong
 
 from setuptools import setup, find_packages
 setup(
@@ -13,5 +13,6 @@ setup(
     author_email="michellehzg@gmail.com",
 
     license="Apache License2.0",
-    platforms="Independant",
+    keywords="A library for VyOS routing setting",
+    url="http://github.com/Hochikong/vyroute"
 )

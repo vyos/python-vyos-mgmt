@@ -1,4 +1,4 @@
-# author=hochikong
+# author=Hochikong
 def modifylo(obj, data):
     """This method provide a loopback address configuration function
 
