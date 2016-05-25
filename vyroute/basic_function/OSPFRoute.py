@@ -3,9 +3,7 @@ def ospfarea(obj, data):
     """This method provide a OSPF area configuration function
 
     Parameter data example:
-    {'config':[{'area':'0','network':'192.168.10.0/24'},
-               {'area':'0','network':'10.20.10.0/24'},
-    ],
+    {'config':{'area':'0','network':'192.168.10.0/24'},
     }
 
     :param obj: a connection object
@@ -16,8 +14,7 @@ def ospfarea(obj, data):
 
     try:
         # Configure ospf area
-        for i in data["config"]:
-            obj.execute(ospf_basic_configuration % (i['area'], i['network']))
+        obj.execute(ospf_basic_configuration % (data['config']['area'], data['config']['network']))
         return {"Result": "Configured successfully"}
     except Exception, e:
         return {"Error": e}

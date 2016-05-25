@@ -70,13 +70,13 @@ class BasicRouter(Router):
         :param address: Router address,example:'192.168.10.10'
         :param cred: Router user and password,example:'vyos:vyos'
         """
-        self.address = address
-        self.cred = list(cred)
-        self.divi = self.cred.index(":")
-        self.username = ''.join(self.cred[:self.divi])
-        self.passwd = ''.join(self.cred[self.divi+1:])
-        self.account = Account(self.username, self.passwd)
-        self.conn = SSH2()
+        self.__address = address
+        self.__cred = list(cred)
+        self.__divi = self.__cred.index(":")
+        self.__username = ''.join(self.__cred[:self.__divi])
+        self.__passwd = ''.join(self.__cred[self.__divi+1:])
+        self.__account = Account(self.__username, self.__passwd)
+        self.__conn = SSH2()
         self.status = {"object": None, "commit": None, "save": None, "configure": None}
 
     def login(self):
@@ -85,8 +85,8 @@ class BasicRouter(Router):
         :return: a python dictionary
         """
         try:
-            if self.conn.connect(self.address) is True:
-                self.conn.login(self.account)
+            if self.__conn.connect(self.__address) is True:
+                self.__conn.login(self.__account)
                 self.status["object"] = "login"
                 return {"Result": "Login successfully."}
             else:
@@ -100,7 +100,7 @@ class BasicRouter(Router):
         :return: a python dictionary
         """
         try:
-            self.conn.close(force=True)
+            self.__conn.close(force=True)
             self.status["object"] = "logout"
             return {"Result": "Logout successfully."}
         except Exception, e:
@@ -114,7 +114,7 @@ class BasicRouter(Router):
         try:
             if self.status["object"] == "login":
                 if self.status["configure"] is None:
-                    self.conn.execute("configure")
+                    self.__conn.execute("configure")
                     self.status["configure"] = "Yes"
                     return {"Result": "Active configure mode successfully."}
                 else:
@@ -135,7 +135,7 @@ class BasicRouter(Router):
                     if self.status["commit"] is None:
                         return {"Error": "You don't need to commit."}
                     if self.status["commit"] == "No":
-                        self.conn.execute("commit")
+                        self.__conn.execute("commit")
                         self.status["commit"] = "Yes"
                         return {"Result": "Commit successfully."}
                     else:
@@ -159,8 +159,9 @@ class BasicRouter(Router):
                         if self.status["save"] is None:
                             return {"Error": "You don't need to save."}
                         if self.status["save"] == "No":
-                            self.conn.execute("save")
+                            self.__conn.execute("save")
                             self.status["save"] = "Yes"
+                            return {"Result": "Save successfully."}
                         else:
                             return {"Error": "You have saved!"}
                     else:
@@ -182,7 +183,7 @@ class BasicRouter(Router):
             if self.status["object"] == "login":
                 if self.status["configure"] == "Yes":
                     if force is True:
-                        self.conn.execute("exit")
+                        self.__conn.execute("exit")
                         self.status["configure"] = None
                         self.status["save"] = None
                         self.status["commit"] = None
@@ -190,7 +191,7 @@ class BasicRouter(Router):
                     if force is False:
                         if self.status["commit"] == "Yes":
                             if self.status["save"] == "Yes":
-                                self.conn.execute("exit")
+                                self.__conn.execute("exit")
                                 self.status["configure"] = None
                                 self.status["save"] = None
                                 self.status["commit"] = None
@@ -215,7 +216,7 @@ class BasicRouter(Router):
         try:
             if self.status["object"] == "login":
                 if self.status["configure"] == "Yes":
-                    res = Modifylo.modifylo(self.conn, data)
+                    res = Modifylo.modifylo(self.__conn, data)
                     if "Result" in res:
                         if self.status["commit"] == "No":
                             pass
@@ -239,9 +240,7 @@ class BasicRouter(Router):
         """Static router setting
 
         Parameter data example:
-        {'config':[{'target':'10.20.10.0/24','next-hop':'10.20.10.1','distance':'1'},
-                   {'target':"192.168.20.0/24','next-hop':'192.168.20.1','distance':'1'},
-        ],
+        {'config':{'target':'10.20.10.0/24','next-hop':'10.20.10.1','distance':'1'},
         }
 
         :param data: a python dictionary
@@ -250,7 +249,7 @@ class BasicRouter(Router):
         try:
             if self.status["object"] == "login":
                 if self.status["configure"] == "Yes":
-                    res = StaticRoute.staticroute(self.conn, data)
+                    res = StaticRoute.staticroute(self.__conn, data)
                     if "Result" in res:
                         if self.status["commit"] == "No":
                             pass
@@ -274,7 +273,7 @@ class BasicRouter(Router):
         """RIP protocols router setting
 
         Parameter data example:
-        {'config':['192.168.10.0/24','10.20.10.0/24'],
+        {'config':'192.168.10.0/24',
         }
 
         :param data: a python dictionary
@@ -283,7 +282,7 @@ class BasicRouter(Router):
         try:
             if self.status["object"] == "login":
                 if self.status["configure"] == "Yes":
-                    res = RIPRoute.riproute(self.conn, data)
+                    res = RIPRoute.riproute(self.__conn, data)
                     if "Result" in res:
                         if self.status["commit"] == "No":
                             pass
@@ -306,11 +305,9 @@ class BasicRouter(Router):
     def ospf_area(self, data):
         """OSPF area setting
 
-        Parameter data example:
-        {'config':[{'area':'0','network':'192.168.10.0/24'},
-                   {'area':'0','network':'10.20.10.0/24'},
-        ],
-        }
+         Parameter data example:
+         {'config':{'area':'0','network':'192.168.10.0/24'},
+         }
 
         :param data: a python dictionary
         :return: a python dictionary
@@ -318,7 +315,7 @@ class BasicRouter(Router):
         try:
             if self.status["object"] == "login":
                 if self.status["configure"] == "Yes":
-                    res = OSPFRoute.ospfarea(self.conn, data)
+                    res = OSPFRoute.ospfarea(self.__conn, data)
                     if "Result" in res:
                         if self.status["commit"] == "No":
                             pass
@@ -351,7 +348,7 @@ class BasicRouter(Router):
         try:
             if self.status["object"] == "login":
                 if self.status["configure"] == "Yes":
-                    res = OSPFRoute.router_id(self.conn, data)
+                    res = OSPFRoute.router_id(self.__conn, data)
                     if "Result" in res:
                         if self.status["commit"] == "No":
                             pass
@@ -384,7 +381,7 @@ class BasicRouter(Router):
         try:
             if self.status["object"] == "login":
                 if self.status["configure"] == "Yes":
-                    res = OSPFRoute.ospf_redistribute(self.conn, data)
+                    res = OSPFRoute.ospf_redistribute(self.__conn, data)
                     if "Result" in res:
                         if self.status["commit"] == "No":
                             pass
@@ -412,7 +409,7 @@ class BasicRouter(Router):
         try:
             if self.status["object"] == "login":
                 if self.status["configure"] == "Yes":
-                    res = OSPFRoute.ospf_adjacency(self.conn)
+                    res = OSPFRoute.ospf_adjacency(self.__conn)
                     if "Result" in res:
                         if self.status["commit"] == "No":
                             pass
@@ -445,7 +442,7 @@ class BasicRouter(Router):
         try:
             if self.status["object"] == "login":
                 if self.status["configure"] == "Yes":
-                    res = OSPFRoute.ospf_default_route(self.conn, data)
+                    res = OSPFRoute.ospf_default_route(self.__conn, data)
                     if "Result" in res:
                         if self.status["commit"] == "No":
                             pass
@@ -478,7 +475,7 @@ class BasicRouter(Router):
         try:
             if self.status["object"] == "login":
                 if self.status["configure"] == "Yes":
-                    res = OSPFRoute.ospf_route_map(self.conn, data)
+                    res = OSPFRoute.ospf_route_map(self.__conn, data)
                     if "Result" in res:
                         if self.status["commit"] == "No":
                             pass
