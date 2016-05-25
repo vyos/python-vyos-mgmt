@@ -195,7 +195,7 @@ class BasicRouter(Router):
             if self.__status["object"] == "login":
                 if self.__status["configure"] == "Yes":
                     if force is True:
-                        self.__conn.execute("exit")
+                        self.__conn.execute("exit discard")
                         self.__status["configure"] = "No"
                         self.__status["save"] = None
                         self.__status["commit"] = None
