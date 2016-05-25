@@ -5,6 +5,7 @@ from vyroute.basic_function import Modifylo
 from vyroute.basic_function import StaticRoute
 from vyroute.basic_function import RIPRoute
 from vyroute.basic_function import OSPFRoute
+from vyroute.basic_function import DeleteRoute
 
 
 class Router(object):
@@ -235,6 +236,39 @@ class BasicRouter(Router):
                 return {"Error": "Router object not connect to a router."}
         except Exception, e:
             return {"Error": e}
+
+    def delete_route(self, data):
+            """Delete router setting
+
+            Parameter data example:
+            {'config':'rip'/'static'/'ospf'/'all'
+            }
+
+            :param data: a python dictionary
+            :return: a python dictionary
+            """
+            try:
+                if self.status["object"] == "login":
+                    if self.status["configure"] == "Yes":
+                        res = DeleteRoute.deleteroute(self.__conn, data)
+                        if "Result" in res:
+                            if self.status["commit"] == "No":
+                                pass
+                            else:
+                                self.status["commit"] = "No"
+                            if self.status["save"] == "No":
+                                pass
+                            else:
+                                self.status["save"] = "No"
+                            return res
+                        else:
+                            return res
+                    else:
+                        return {"Error": "You are not in configure mode."}
+                else:
+                    return {"Error": "Router object not connect to a router."}
+            except Exception, e:
+                return {"Error": e}
 
     def static_route(self, data):
         """Static router setting
