@@ -1,4 +1,4 @@
-# author=Hochikong
+# Copyright (c) 2016 Hochikong
 def riproute(obj, data):
     """This method provide a RIP protocols router configuration function
 

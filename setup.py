@@ -1,4 +1,4 @@
-# author=Hochikong
+# Copyright (c) 2016 Hochikong
 
 from setuptools import setup, find_packages
 setup(

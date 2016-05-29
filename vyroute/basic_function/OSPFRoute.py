@@ -1,4 +1,4 @@
-# author=Hochikong
+# Copyright (c) 2016 Hochikong
 def ospfarea(obj, data):
     """This method provide a OSPF area configuration function
 

@@ -1,4 +1,5 @@
-# author=Hochikong
+# Copyright (c) 2016 Hochikong
+
 from Exscript.protocols import SSH2
 from Exscript import Account
 from vyroute.basic_function import Modifylo

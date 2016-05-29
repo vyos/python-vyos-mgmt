@@ -1,4 +1,4 @@
-# author=Hochikong
+# Copyright (c) 2016 Hochikong
 def staticroute(obj, data):
     """This method provide a basic static router configuration function
 
