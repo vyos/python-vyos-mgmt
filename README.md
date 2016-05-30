@@ -1,5 +1,323 @@
+#VyRoute
+
+A python library for VyOS routing service setting
+
+Author:Hochikong  
+Contact me:1097225749@qq.com(usually use) or michellehzg@gmail.com(Inconvenient in China mainland)  
+
+This python library is used for VyOS routing service configuration,now it only provide static,RIP and 
+OSPF configuration function,I will add BGP function if necessary.If you are interested in this project,you can clone and add features you
+want,such as BGP and interfaces setting.
+
+I will continue develop other libraries used for firewall and VPN service configuration.
+
+##Comment
+I have build an .egg file in [https://github.com/Hochikong/vyroute/tree/master/dist.](https://github.com/Hochikong/vyroute/tree/master/dist.)    
+
+You can clone this reposity install it or just download .egg file to install by easy_install.  
+
+This lib relies on Exscript,you can find it on github.  
+
+MIT opensource license applies to whole library.  
+
+##Requirement
+Exscript
+
+##Design
+Now,SDN is a technologies trend.Like Openflow and switch controller,they provide us with centralized control and programmable features.But adminstrators of VyOS still need to login the system and 
+configure services manually.I need a tool which can configure router service remotely and user can write a program to control the system like SDN controller.So I decide to write this library.Up to now,it just provide static,RIP and OSPF router configuration function.
+
+There are two classes in library:Router and BasicRouter.Router is a parent class,BasicRouter inherit parent class and rewrite its memeber 
+methods.When we use this library,we should use VyOS's address and user information to initialize a BasicRouter,then we can use member methods to control the system.
+Just like administrators configure services,in this lib you also need to enter configure mode,execute configuration,commit it and save it.
+
+BasicRouter has a member variable(python dictionary) "status",it store a router substance's status.
+
+	self.__status = {"object": None, "commit": None, "save": None, "configure": None}
+
+When it finish initialization,all values in "status" are None.When a 
+user login the substance,the value of "object" will change to "login".When the user execute configure(),he will enter configure mode and value of "configure" will change to "Yes",during configure mode,all configuration method will change the value of "commit" and "save" to "no",when user finish a operation but not commit,the following method will not change the value of "commit" and "save".  
+
+When the user want to exit configure mode,only he have commit and save the configuration can he exit configure mode,the value of "commit" and "save" must change to "Yes".If he don't want to save the configuration,he should use exit_config(force=True) to exit.If the user execute logout(),"object" will change to "logout" and the others will change to None.  
+
+When the user enter configure mode,he can use some methods to set up a router.But most of methods should use a configuration data as an input parameter.A configuration data is a python dictionary which include keys and values. Every method will return a result data,similar to the method's input.
+
+	>>> data = {'config':'std'}
+	>>> vyos1.delete_route(data)
+	{'Error': 'Nonsupport protocols type.'}
+
+Therefore most of methods only have one "data" parameter,but different methods' input data are different.If input data have any mistakes,due to Exscript,the method will return a timeout exception 
+after few seconds,then the error reason(from VyOS) will be return when you execute next configuration.So you should execute the former configuration one more time.
+
+	>>> vyos1.delete_route({'config':'all'})
+	{'Error': InvalidCommandException('Device said:\nset protocols ospf default-information originate always\r\nWARNING: terminal is not fully functional\r\n\r-  (press RETURN)\r\r\r\x07\x1b[m\r\n  Configuration path: [protocols ospf default-information originate always] already exists\x1b[m\r\n\x1b[m\r\n\r[edit]\r\r\nvyos@vyos# elete protocols\r\n\r\n  Invalid command: [elete]\r\n\r\n[edit]\r\r\nvyos@vyos# ',)}
+	>>> vyos1.delete_route({'config':'all'})
+	{'Result': 'Delete successfully.'}
+
+In this library,if methods return a information without any mistakes,it doesn't means your configuration is proper(an available router) and it only means your input data is valid.
+
+###Correct:
+
+	>>> vyos1.login()
+	{'Result': 'Login successfully.'}
+
+###Error:
+
+	>>> data = {'config':'std'}
+	>>> vyos1.delete_route(data)
+	{'Error': 'Nonsupport protocols type.'}
+
+In the return of all methods,if it configures successfully,the key of return is "Result".If there any mistakes,the key is"Error".The user can judge whether his configuration is vaild or successful by the only key in return.
+
+##Usage example
+We can try to execute a static router confinguration but we don't save it
+
+	>>> from vyroute.Router import BasicRouter
+	>>> vyos1 = BasicRouter('172.16.77.184','vyos:vyos')
+	>>> vyos1.login()
+	{'Result': 'Login successfully.'}
+	>>> vyos1.status()
+	{'commit': None, 'object': 'login', 'configure': None, 'save': None}
+	>>> vyos1.configure()
+	{'Result': 'Active configure mode successfully.'}
+	>>> static = {'config':{'target':'10.20.10.0/24','next-hop':'10.20.10.1','distance':'1'},}
+	>>> vyos1.static_route(static)
+	{'Result': 'Configured successfully'}
+	>>> vyos1.commit_config()
+	{'Result': 'Commit successfully.'}
+	>>> vyos1.exit_config(force=True)
+	{'Result': 'Exit configure mode successfully.'}
+	>>> vyos1.status()
+	{'commit': None, 'object': 'login', 'configure': 'No', 'save': None}
+	>>> vyos1.logout()
+	{'Result': 'Logout successfully.'}
+	>>> vyos1.status()
+	{'commit': None, 'object': 'logout', 'configure': None, 'save': None}
+
+If you reboot VyOS,you will find the configuration disappears.If you regret your actions,you want to configure again and save it,you can use "vyos1" continue your work.
+
+    >>> vyos1.login()
+	{'Result': 'Login successfully.'}
+	>>> vyos1.status()
+	{'commit': None, 'object': 'login', 'configure': None, 'save': None}
+	>>> vyos1.static_route(static)
+	{'Error': 'You are not in configure mode.'}
+	>>> vyos1.configure()
+	{'Result': 'Active configure mode successfully.'}
+	>>> vyos1.static_route(static)
+	{'Result': 'Configured successfully'}
+	>>> vyos1.exit_config()
+	{'Error': 'You should commit first.'}
+	>>> vyos1.commit_config()
+	{'Result': 'Commit successfully.'}
+	>>> vyos1.exit_config()
+	{'Error': 'You should save first.'}
+	>>> vyos1.save_config()
+	{'Result': 'Save successfully.'}
+	>>> vyos1.status()
+	{'commit': 'Yes', 'object': 'login', 'configure': 'Yes', 'save': 'Yes'}
+	>>> vyos1.exit_config()
+	{'Result': 'Exit configure mode successfully.'}
+	>>> vyos1.logout()
+	{'Result': 'Logout successfully.'}
+
+Now your configuration will be saved.
+
+#All methods
+##login():
+No input  
+
+Return a dictionary:   
+Login successfully:{'Result': 'Login successfully.'}  
+Failed:{"Error": "Connect Failed."}  
+
+If there any mistakes,it will return an dictionary and the value is a python exception.(Every method below has this return when an exception rises,so I will ignore this when I explain following methods.)
+
+You should create a router substance then you can use this method to login.
+
+	>>> from vyroute.Router import BasicRouter
+	>>> vyos1 = BasicRouter('172.16.77.184','vyos:vyos')
+	>>> vyos1.login()
+	{'Result': 'Login successfully.'}
+
+##logout()
+No input  
+
+Return a dictionary:  
+Logout successfully:{"Result": "Logout successfully."}
+
+This method execute a close() on a connection.
+
+You can use this method logout a router substance.
+
+##status()
+No input  
+
+Return a dictionary,return the status of router substance.
+
+##configure()
+No input  
+
+Return a dictionary:  
+Enter configure mode successfully:{"Result": "Active configure mode successfully."}  
+If you already in configure mode:{"Error": "In configure mode now!"}  
+If you still not login:{"Error": "Router object not connect to a router."}  
+
+You can use this method enter configure mode,but you should login a substance first.
+
+	>>> vyos1.configure()
+	{'Result': 'Active configure mode successfully.'}
+
+##commit_config()
+No input  
+
+Return a dictionary:  
+Commit successfully:{"Result": "Commit successfully."}  
+If "commit" is None:{"Error": "You don't need to commit."}  
+If you have commit before:{"Error": "You have committed!"}  
+If you are not in configure mode:{"Error": "Router not in configure mode!"}  
+If you still not login:{"Error": "Router object not connect to a router."}  
+
+Every methods below will check whether you have login and enter configure mod,if not it will return a error info and you can read the content of return from here.I will ignore these return when I explain following methods.
+
+You can use this method to commit your configuration.
+
+	>>> vyos1.commit_config()
+	{'Result': 'Commit successfully.'}
+
+##save_config()
+No input  
+
+Return a dictionary:
+Save successfully:{"Result": "Save successfully."}  
+If "save" is None:{"Error": "You don't need to save."}  
+If you have save before:{"Error": "You have saved!"}  
+If you still not commit:{"Error": "You need to commit first!"}  
+
+You can use this method to save your configuration.
+
+	>>> vyos1.save_config()
+	{'Result': 'Save successfully.'}
+
+##exit_config(force=False)
+Parameter "force":  
+True or False.The default value is False,if you don't want to save your configuration you should use "force=True" as input.
+
+Return a dictionary:  
+Exit successfully:{"Result": "Exit configure mode successfully."}  
+
+If you do not commit and save,please read the 6th explanation to get more infomation.
+
+##lo(data)
+Parameter "data":a dictionary  
+Example:{'config':'1.1.1.1/32'}  
+
+Return a dictionary:  
+Configure successfully:{"Result": "Modify successfully."}  
+
+You can use this method to create a new VyOS loopback address for interface "lo".We usually use this new address as router id.
+
+##delete_route(data)
+Parameter "data":a dictionary  
+Example:{'config':'all'}
+
+The value of "config" just "rip","static","ospf" and "all".Please remember "all" will delete all configuration in the section "protocols" in VyOS's configuration file.The others will delete the corresponding part of configuration in "protocols" section.
+
+Return a dictionary:  
+Delete successfully:{"Result": "Delete successfully."}  
+Invalid value:{"Error": "Nonsupport protocols type."}  
+
+You can use this method delete router configuration but please be careful.
+
+##static_route(data)
+Parameter "data":a dictionary  
+Example:{'config':{'target':'10.20.10.0/24','next-hop':'10.20.10.1','distance':'1'},}  
+
+This method equal to "set protocols static route next-hop distance".
+
+Return a dictionary:  
+Configure successfully:{"Result": "Configured successfully"}
+
+You can use this method configure a static router.
+
+##rip_route(data)
+Parameter "data":a dictionary  
+Example:{'config':'192.168.10.0/24',}  
+
+This method equal to "set protocols rip network" and "set protocols rip redistribute connected".
+
+Return a dictionary:  
+Configure successfully:{"Result": "Configured successfully"}  
+
+You can use this method configure a RIP router and execute routing redistribution.
+
+##ospf_area(data)
+Parameter "data":a dictionary  
+Example:{'config'：{'area':'0','network':'192.168.10.0/24'},}  
+
+This method equal to "set protocols ospf area network".
+
+Return a dictionary:  
+Configure successfully:{"Result": "Configured successfully"}  
+
+You can use this method configure OSPF areas.
+
+##router_id(data)
+Parameter "data":a dictionary  
+Example:{'config':{'id':'1.1.1.1'},}  
+
+This method equal to "set protocols ospf parameters router-id".
+
+Return a dictionary:  
+Configure successfully:{"Result": "Configured successfully"}
+
+You can use this method configure router id.
+
+##ospf_redistribute(data)
+Parameter "data":a dictionary  
+Example: {'config':{'type':'2'},}  
+
+This method equal to "set protocols ospf redistribute connected metric-type" and "set protocols ospf redistribute connected route-map CONNECT".
+
+Return a dictionary:  
+Configure successfully:{"Result": "Configured successfully"}  
+
+You can use this method execute routing redistribution.
+
+##ospf_adjacency()
+No input
+
+This method equal to "set protocols ospf log-adjacency-changes".
+
+Return a dictionary:  
+Configure successfully:{"Result": "Configured successfully"}
+
+##ospf\_default\_route(data)
+Parameter "data":a dictionary  
+Example:{'config':{'metric':'10','metric-type':'2'},}  
+
+This method equal to "set protocols ospf default-information originate always","set protocols ospf default-information originate metric" and "set protocols ospf default-information originate metric-type".
+
+Return a dictionary:  
+Configure successfully:{"Result": "Configured successfully"}  
+
+You can use this method configure default route.
+
+##ospf\_route\_map(data)
+Parameter "data":a dictionary  
+Example:{'config':{'rule':'10','interface':'lo'},}  
+
+This method equal to "set policy route-map CONNECT rule action permit" and "set policy route-map CONNECT rule match interface".
+
+Return a dictionary:  
+Configure successfully:{"Result": "Configured successfully"} 
+
+You can use this method configure route-map.
+
+==================================================================================
+
 # VyRoute
-A python library for VyOS routing setting
+一个用于VyOS路由服务设置的库
 
 作者：Hochikong  
 联系我：michellehzg@gmail.com（较少用） or 1097225749@qq.com
@@ -17,7 +335,7 @@ A python library for VyOS routing setting
 
 本库依赖于Exscript库，可以在github上找到
 
-本库基于Apache License2.0协议开源
+本库基于MIT协议开源
 
 ##设计
 这个库主要是为了可编程、满足远程管理VyOS路由功能的需求而编写，目前实现了RIP、静态、OSPF三种AS内部协议配置的功能。  
