@@ -1,0 +1,7 @@
+# Compiled python modules.
+*.pyc
+
+# Generate by setuptools
+dist/
+build/
+*.egg-info
