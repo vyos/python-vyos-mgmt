@@ -9,10 +9,10 @@ setup(
 
     description="A library for VyOS routing setting",
     long_description="A library for VyOS routing setting",
-    author="hochikong",
+    author="Hochikong",
     author_email="michellehzg@gmail.com",
 
-    license="Apache License2.0",
+    license="MIT",
     keywords="A library for VyOS routing setting",
-    url="http://github.com/Hochikong/vyroute"
+    url="http://https://github.com/vyos/python-vyos-mgmt"
 )

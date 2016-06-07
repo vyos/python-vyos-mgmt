@@ -12,10 +12,6 @@ want,such as BGP and interfaces setting.
 I will continue develop other libraries used for firewall and VPN service configuration.
 
 ##Comment
-I have build an .egg file in [https://github.com/Hochikong/vyroute/tree/master/dist.](https://github.com/Hochikong/vyroute/tree/master/dist.)    
-
-You can clone this reposity install it or just download .egg file to install by easy_install.  
-
 This lib relies on Exscript,you can find it on github.  
 
 MIT opensource license applies to whole library.  
