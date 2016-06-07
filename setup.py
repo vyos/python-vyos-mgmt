@@ -14,5 +14,5 @@ setup(
 
     license="MIT",
     keywords="A library for VyOS routing setting",
-    url="http://https://github.com/vyos/python-vyos-mgmt"
+    url="https://github.com/vyos/python-vyos-mgmt"
 )
