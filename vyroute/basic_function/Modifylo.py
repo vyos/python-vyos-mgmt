@@ -17,5 +17,5 @@ def modifylo(obj, data):
         # Configure loopback interface lo address
         obj.execute(lo_basic_configuration % data['config'])
         return {"Result": "Modify successfully."}
-    except Exception, e:
+    except Exception as e:
         return {'Error': e}

@@ -16,7 +16,7 @@ def ospfarea(obj, data):
         # Configure ospf area
         obj.execute(ospf_basic_configuration % (data['config']['area'], data['config']['network']))
         return {"Result": "Configured successfully"}
-    except Exception, e:
+    except Exception as e:
         return {"Error": e}
 
 
@@ -36,7 +36,7 @@ def router_id(obj, data):
         # Configure router id
         obj.execute(router_id_configuration % data['config']['id'])
         return {"Result": "Configured successfully"}
-    except Exception, e:
+    except Exception as e:
         return {"Error": e}
 
 
@@ -58,7 +58,7 @@ def ospf_redistribute(obj, data):
         obj.execute(redistribute_configuration['0'] % data['config']['type'])
         obj.execute(redistribute_configuration['1'])
         return {"Result": "Configured successfully"}
-    except Exception, e:
+    except Exception as e:
         return {"Error": e}
 
 
@@ -72,7 +72,7 @@ def ospf_adjacency(obj):
     try:
         obj.execute(log_adjacency_changes_configuration)
         return {"Result": "Configured successfully"}
-    except Exception, e:
+    except Exception as e:
         return {"Error": e}
 
 
@@ -97,7 +97,7 @@ def ospf_default_route(obj, data):
         obj.execute(default_route_configuration['1'] % data['config']['metric'])
         obj.execute(default_route_configuration['2'] % data['config']['metric-type'])
         return {"Result": "Configured successfully"}
-    except Exception, e:
+    except Exception as e:
         return {"Error": e}
 
 
@@ -119,5 +119,5 @@ def ospf_route_map(obj, data):
         obj.execute(route_map_configuration['0'] % data['config']['rule'])
         obj.execute(route_map_configuration['1'] % (data['config']['rule'], data['config']['interface']))
         return {"Result": "Configured successfully"}
-    except Exception, e:
+    except Exception as e:
         return {"Error": e}

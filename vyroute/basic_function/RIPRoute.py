@@ -17,5 +17,5 @@ def riproute(obj, data):
         obj.execute(rip_basic_configuration % data['config'])
         obj.execute(redistribute_configuration)
         return {"Result": "Configured successfully"}
-    except Exception, e:
+    except Exception as e:
         return {"Error": e}

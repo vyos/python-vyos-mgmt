@@ -103,7 +103,7 @@ class BasicRouter(Router):
                 return {"Result": "Login successfully."}
             else:
                 return {"Error": "Connect Failed."}
-        except Exception, e:
+        except Exception as e:
             return {"Error": e}
 
     def logout(self):
@@ -116,7 +116,7 @@ class BasicRouter(Router):
             self.__status["object"] = "logout"
             self.__status["configure"] = None
             return {"Result": "Logout successfully."}
-        except Exception, e:
+        except Exception as e:
             return {"Error": e}
 
     def configure(self):
@@ -134,7 +134,7 @@ class BasicRouter(Router):
                     return {"Error": "In configure mode now!"}
             else:
                 return {"Error": "Router object not connect to a router."}
-        except Exception, e:
+        except Exception as e:
             return {"Error": e}
 
     def commit_config(self):
@@ -157,7 +157,7 @@ class BasicRouter(Router):
                     return {"Error": "Router not in configure mode!"}
             else:
                 return {"Error": "Router object not connect to a router."}
-        except Exception, e:
+        except Exception as e:
             return {"Error": e}
 
     def save_config(self):
@@ -183,7 +183,7 @@ class BasicRouter(Router):
                     return {"Error": "Router not in configure mode!"}
             else:
                 return {"Error": "Router object not connect to a router."}
-        except Exception, e:
+        except Exception as e:
             return {"Error": e}
 
     def exit_config(self, force=False):
@@ -217,7 +217,7 @@ class BasicRouter(Router):
                     return {"Error": "You are not in configure mode,need not exit."}
             else:
                 return {"Error": "Router object not connect to a router."}
-        except Exception, e:
+        except Exception as e:
             return {"Error": e}
 
     def lo(self, data):
@@ -250,7 +250,7 @@ class BasicRouter(Router):
                     return {"Error": "You are not in configure mode."}
             else:
                 return {"Error": "Router object not connect to a router."}
-        except Exception, e:
+        except Exception as e:
             return {"Error": e}
 
     def delete_route(self, data):
@@ -283,7 +283,7 @@ class BasicRouter(Router):
                         return {"Error": "You are not in configure mode."}
                 else:
                     return {"Error": "Router object not connect to a router."}
-            except Exception, e:
+            except Exception as e:
                 return {"Error": e}
 
     def static_route(self, data):
@@ -316,7 +316,7 @@ class BasicRouter(Router):
                     return {"Error": "You are not in configure mode."}
             else:
                 return {"Error": "Router object not connect to a router."}
-        except Exception, e:
+        except Exception as e:
             return {"Error": e}
 
     def rip_route(self, data):
@@ -349,7 +349,7 @@ class BasicRouter(Router):
                     return {"Error": "You are not in configure mode."}
             else:
                 return {"Error": "Router object not connect to a router."}
-        except Exception, e:
+        except Exception as e:
             return {"Error": e}
 
     def ospf_area(self, data):
@@ -382,7 +382,7 @@ class BasicRouter(Router):
                     return {"Error": "You are not in configure mode."}
             else:
                 return {"Error": "Router object not connect to a router."}
-        except Exception, e:
+        except Exception as e:
             return {"Error": e}
 
     def router_id(self, data):
@@ -415,7 +415,7 @@ class BasicRouter(Router):
                     return {"Error": "You are not in configure mode."}
             else:
                 return {"Error": "Router object not connect to a router."}
-        except Exception, e:
+        except Exception as e:
             return {"Error": e}
 
     def ospf_redistribute(self, data):
@@ -448,7 +448,7 @@ class BasicRouter(Router):
                     return {"Error": "You are not in configure mode."}
             else:
                 return {"Error": "Router object not connect to a router."}
-        except Exception, e:
+        except Exception as e:
             return {"Error": e}
 
     def ospf_adjacency(self):
@@ -476,7 +476,7 @@ class BasicRouter(Router):
                     return {"Error": "You are not in configure mode."}
             else:
                 return {"Error": "Router object not connect to a router."}
-        except Exception, e:
+        except Exception as e:
             return {"Error": e}
 
     def ospf_default_route(self, data):
@@ -509,7 +509,7 @@ class BasicRouter(Router):
                     return {"Error": "You are not in configure mode."}
             else:
                 return {"Error": "Router object not connect to a router."}
-        except Exception, e:
+        except Exception as e:
             return {"Error": e}
 
     def ospf_route_map(self, data):
@@ -542,5 +542,5 @@ class BasicRouter(Router):
                     return {"Error": "You are not in configure mode."}
             else:
                 return {"Error": "Router object not connect to a router."}
-        except Exception, e:
+        except Exception as e:
             return {"Error": e}

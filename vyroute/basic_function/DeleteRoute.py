@@ -38,5 +38,5 @@ def deleteroute(obj, data):
             return {"Result": "Delete successfully."}
         else:
             return {"Error": "Nonsupport protocols type."}
-    except Exception, e:
+    except Exception as e:
         return {"Error": e}

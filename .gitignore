@@ -1,5 +1,6 @@
 # Compiled python modules.
 *.pyc
+*.bak
 
 # Generate by setuptools
 dist/

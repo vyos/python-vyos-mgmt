@@ -18,5 +18,5 @@ def staticroute(obj, data):
                                                   data['config']['next-hop'],
                                                   data['config']['distance']))
         return {"Result": "Configured successfully"}
-    except Exception, e:
+    except Exception as e:
         return {'Error': e}
