@@ -1,8 +1,4 @@
 # Copyright (c) 2016 Hochikong
-from Exscript.protocols import SSH2
-from Exscript import Account
-
-
 def deleteroute(obj, data):
     """This method provide a router configuration delete function
 
@@ -25,17 +21,33 @@ def deleteroute(obj, data):
 
     try:
         if data['config'] == "all":
-            obj.execute(delete_all_protocols)
-            return {"Result": "Delete successfully."}
+            obj.sendline(delete_all_protocols)
+            obj.prompt()
+            if len(obj.before) > obj.before.index('\r\n') + 2:
+                return obj.before
+            else:
+                return {"Result": "Delete successfully."}
         elif data['config'] == 'rip':
-            obj.execute(delete_basic_configuration % 'rip')
-            return {"Result": "Delete successfully."}
+            obj.sendline(delete_basic_configuration % 'rip')
+            obj.prompt()
+            if len(obj.before) > obj.before.index('\r\n') + 2:
+                return obj.before
+            else:
+                return {"Result": "Delete successfully."}
         elif data['config'] == 'static':
-            obj.execute(delete_basic_configuration % 'static')
-            return {"Result": "Delete successfully."}
+            obj.sendline(delete_basic_configuration % 'static')
+            obj.prompt()
+            if len(obj.before) > obj.before.index('\r\n') + 2:
+                return obj.before
+            else:
+                return {"Result": "Delete successfully."}
         elif data['config'] == 'ospf':
-            obj.execute(delete_basic_configuration % 'ospf')
-            return {"Result": "Delete successfully."}
+            obj.sendline(delete_basic_configuration % 'ospf')
+            obj.prompt()
+            if len(obj.before) > obj.before.index('\r\n') + 2:
+                return obj.before
+            else:
+                return {"Result": "Delete successfully."}
         else:
             return {"Error": "Nonsupport protocols type."}
     except Exception as e:

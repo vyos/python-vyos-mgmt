@@ -14,9 +14,13 @@ def staticroute(obj, data):
 
     try:
         # Configure static router
-        obj.execute(static_basic_configuration % (data['config']['target'],
-                                                  data['config']['next-hop'],
-                                                  data['config']['distance']))
-        return {"Result": "Configured successfully"}
+        obj.sendline(static_basic_configuration % (data['config']['target'],
+                                                   data['config']['next-hop'],
+                                                   data['config']['distance']))
+        obj.prompt()
+        if len(obj.before) > obj.before.index('\r\n') + 2:
+            return obj.before
+        else:
+            return {"Result": "Configured successfully"}
     except Exception as e:
         return {'Error': e}

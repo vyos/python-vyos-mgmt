@@ -14,8 +14,12 @@ def ospfarea(obj, data):
 
     try:
         # Configure ospf area
-        obj.execute(ospf_basic_configuration % (data['config']['area'], data['config']['network']))
-        return {"Result": "Configured successfully"}
+        obj.sendline(ospf_basic_configuration % (data['config']['area'], data['config']['network']))
+        obj.prompt()
+        if len(obj.before) > obj.before.index('\r\n') + 2:
+            return obj.before
+        else:
+            return {"Result": "Configured successfully"}
     except Exception as e:
         return {"Error": e}
 
@@ -34,8 +38,12 @@ def router_id(obj, data):
     router_id_configuration = "set protocols ospf parameters router-id %s"
     try:
         # Configure router id
-        obj.execute(router_id_configuration % data['config']['id'])
-        return {"Result": "Configured successfully"}
+        obj.sendline(router_id_configuration % data['config']['id'])
+        obj.prompt()
+        if len(obj.before) > obj.before.index('\r\n') + 2:
+            return obj.before
+        else:
+            return {"Result": "Configured successfully"}
     except Exception as e:
         return {"Error": e}
 
@@ -55,29 +63,46 @@ def ospf_redistribute(obj, data):
                                   "1": "set protocols ospf redistribute connected route-map CONNECT",
                                   }
     try:
-        obj.execute(redistribute_configuration['0'] % data['config']['type'])
-        obj.execute(redistribute_configuration['1'])
-        return {"Result": "Configured successfully"}
+        reg = 0
+        error_message = []
+        obj.sendline(redistribute_configuration['0'] % data['config']['type'])
+        obj.prompt()
+        if len(obj.before) > obj.before.index('\r\n') + 2:
+            error_message.append(obj.before)
+            reg += 1
+        obj.sendline(redistribute_configuration['1'])
+        obj.prompt()
+        if len(obj.before) > obj.before.index('\r\n') + 2:
+            error_message.append(obj.before)
+            reg += 1
+        if reg > 0:
+            return error_message
+        else:
+            return {"Result": "Configured successfully"}
     except Exception as e:
         return {"Error": e}
 
 
 def ospf_adjacency(obj):
-    """This method execute : set protocols ospf log-adjacency-changes
+    """This method sendline : set protocols ospf log-adjacency-changes
 
     :param obj: a connection object
     :return: a python dictionary
     """
     log_adjacency_changes_configuration = "set protocols ospf log-adjacency-changes"
     try:
-        obj.execute(log_adjacency_changes_configuration)
-        return {"Result": "Configured successfully"}
+        obj.sendline(log_adjacency_changes_configuration)
+        obj.prompt()
+        if len(obj.before) > obj.before.index('\r\n') + 2:
+            return obj.before
+        else:
+            return {"Result": "Configured successfully"}
     except Exception as e:
         return {"Error": e}
 
 
 def ospf_default_route(obj, data):
-    """This method execute : set protocols ospf default-information originate always
+    """This method sendline : set protocols ospf default-information originate always
     and other commands
 
     Parameter data example:
@@ -93,10 +118,27 @@ def ospf_default_route(obj, data):
                                    "2": "set protocols ospf default-information originate metric-type %s",
                                    }
     try:
-        obj.execute(default_route_configuration['0'])
-        obj.execute(default_route_configuration['1'] % data['config']['metric'])
-        obj.execute(default_route_configuration['2'] % data['config']['metric-type'])
-        return {"Result": "Configured successfully"}
+        reg = 0
+        error_messsage = []
+        obj.sendline(default_route_configuration['0'])
+        obj.prompt()
+        if len(obj.before) > obj.before.index('\r\n') + 2:
+            error_messsage.append(obj.before)
+            reg += 1
+        obj.sendline(default_route_configuration['1'] % data['config']['metric'])
+        obj.prompt()
+        if len(obj.before) > obj.before.index('\r\n') + 2:
+            error_messsage.append(obj.before)
+            reg += 1
+        obj.sendline(default_route_configuration['2'] % data['config']['metric-type'])
+        obj.prompt()
+        if len(obj.before) > obj.before.index('\r\n') + 2:
+            error_messsage.append(obj.before)
+            reg += 1
+        if reg > 0:
+            return error_messsage
+        else:
+            return {"Result": "Configured successfully"}
     except Exception as e:
         return {"Error": e}
 
@@ -116,8 +158,21 @@ def ospf_route_map(obj, data):
                                "1": "set policy route-map CONNECT rule %s match interface %s",
                                }
     try:
-        obj.execute(route_map_configuration['0'] % data['config']['rule'])
-        obj.execute(route_map_configuration['1'] % (data['config']['rule'], data['config']['interface']))
-        return {"Result": "Configured successfully"}
+        reg = 0
+        error_messsage = []
+        obj.sendline(route_map_configuration['0'] % data['config']['rule'])
+        obj.prompt()
+        if len(obj.before) > obj.before.index('\r\n') + 2:
+            error_messsage.append(obj.before)
+            reg += 1
+        obj.sendline(route_map_configuration['1'] % (data['config']['rule'], data['config']['interface']))
+        obj.prompt()
+        if len(obj.before) > obj.before.index('\r\n') + 2:
+            error_messsage.append(obj.before)
+            reg += 1
+        if reg > 0:
+            return error_messsage
+        else:
+            return {"Result": "Configured successfully"}
     except Exception as e:
         return {"Error": e}

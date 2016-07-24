@@ -15,7 +15,11 @@ def modifylo(obj, data):
 
     try:
         # Configure loopback interface lo address
-        obj.execute(lo_basic_configuration % data['config'])
-        return {"Result": "Modify successfully."}
+        obj.sendline(lo_basic_configuration % data['config'])
+        obj.prompt()
+        if len(obj.before) > obj.before.index('\r\n') + 2:
+            return obj.before
+        else:
+            return {"Result": "Modify successfully."}
     except Exception as e:
         return {'Error': e}
