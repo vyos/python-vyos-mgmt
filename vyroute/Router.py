@@ -113,6 +113,7 @@ class BasicRouter(Router):
             self.__conn.close()
             self.__status["status"] = "logout"
             self.__status["configure"] = None
+            self.__conn = pxssh()
             return {"Result": "Logout successfully."}
         except Exception as e:
             return {"Error": e}
@@ -215,6 +216,10 @@ class BasicRouter(Router):
                                 return {"Result": "Exit configure mode successfully."}
                             else:
                                 return {"Error": "You should save first."}
+                        elif self.__status["commit"] is None:
+                            self.__conn.sendline("exit")
+                            self.__conn.prompt()
+                            return {"Result": "Exit configure mode successfully."}
                         else:
                             return {"Error": "You should commit first."}
                 else:
