@@ -206,7 +206,7 @@ class BasicRouter(Router):
                         self.__status["save"] = None
                         self.__status["commit"] = None
                         return {"Result": "Exit configure mode successfully."}
-                    if force is False:
+                    else:
                         if self.__status["commit"] == "Yes":
                             if self.__status["save"] == "Yes":
                                 self.__conn.sendline("exit")
@@ -220,6 +220,7 @@ class BasicRouter(Router):
                         elif self.__status["commit"] is None:
                             self.__conn.sendline("exit")
                             self.__conn.prompt()
+                            print "shit"
                             self.__status['configure'] = "No"
                             return {"Result": "Exit configure mode successfully."}
                         else:
