@@ -6,6 +6,7 @@ from vyroute.basic_function import StaticRoute
 from vyroute.basic_function import RIPRoute
 from vyroute.basic_function import OSPFRoute
 from vyroute.basic_function import DeleteRoute
+from vyroute.basic_function import BGPRoute
 
 
 class Router(object):
@@ -553,3 +554,125 @@ class BasicRouter(Router):
                 return {"Error": "Router object not connect to a router."}
         except Exception as e:
             return {"Error": e}
+
+    def bgp_as(self, self_as, neighbor, multihop, remote_as, update_source):
+        """VyOS BGP router basic setting
+
+        :param self_as: The AS number of the router you login
+        :param neighbor: The neighbor router address
+        :param multihop: The amount of hops
+        :param remote_as: The remote AS number
+        :param update_source: The update source
+        :return: A message
+        """
+        try:
+            if self.__status["status"] == "login":
+                if self.__status["configure"] == "Yes":
+                    res = BGPRoute.bgp_as(self.__conn, self_as, neighbor, multihop, remote_as, update_source)
+                    if "Result" in res:
+                        if self.__status["commit"] == "No":
+                            pass
+                        else:
+                            self.__status["commit"] = "No"
+                        if self.__status["save"] == "No":
+                            pass
+                        else:
+                            self.__status["save"] = "No"
+                        return res
+                    else:
+                        return res
+                else:
+                    return "Error:You are not in configure mode."
+            else:
+                return "Error:Router object not connect to a router."
+        except Exception as e:
+            return e
+
+    def bgp_network(self, self_as, network_range):
+        """Add a network to BGP router
+
+        :param self_as: The AS number of the router you login
+        :param network_range: The target network,don't forget the netmask
+        :return: A message
+        """
+        try:
+            if self.__status["status"] == "login":
+                if self.__status["configure"] == "Yes":
+                    res = BGPRoute.bgp_network(self.__conn, self_as, network_range)
+                    if "Result" in res:
+                        if self.__status["commit"] == "No":
+                            pass
+                        else:
+                            self.__status["commit"] = "No"
+                        if self.__status["save"] == "No":
+                            pass
+                        else:
+                            self.__status["save"] = "No"
+                        return res
+                    else:
+                        return res
+                else:
+                    return "Error:You are not in configure mode."
+            else:
+                return "Error:Router object not connect to a router."
+        except Exception as e:
+            return e
+
+    def bgp_router_id(self, self_as, router_id):
+        """Set a router id for the router you login
+
+        :param self_as: The AS number of the router you login
+        :param router_id: The router id,or you can use the router address as router id
+        :return: A message
+        """
+        try:
+            if self.__status["status"] == "login":
+                if self.__status["configure"] == "Yes":
+                    res = BGPRoute.bgp_router_id(self.__conn, self_as, router_id)
+                    if "Result" in res:
+                        if self.__status["commit"] == "No":
+                            pass
+                        else:
+                            self.__status["commit"] = "No"
+                        if self.__status["save"] == "No":
+                            pass
+                        else:
+                            self.__status["save"] = "No"
+                        return res
+                    else:
+                        return res
+                else:
+                    return "Error:You are not in configure mode."
+            else:
+                return "Error:Router object not connect to a router."
+        except Exception as e:
+            return e
+
+    def bgp_blackhole_route(self, network_range):
+        """Set a blackhole route
+
+        :param network_range: The target network,don't forget the netmask
+        :return: A message
+        """
+        try:
+            if self.__status["status"] == "login":
+                if self.__status["configure"] == "Yes":
+                    res = BGPRoute.bgp_blackhole_route(self.__conn, network_range)
+                    if "Result" in res:
+                        if self.__status["commit"] == "No":
+                            pass
+                        else:
+                            self.__status["commit"] = "No"
+                        if self.__status["save"] == "No":
+                            pass
+                        else:
+                            self.__status["save"] = "No"
+                        return res
+                    else:
+                        return res
+                else:
+                    return "Error:You are not in configure mode."
+            else:
+                return "Error:Router object not connect to a router."
+        except Exception as e:
+            return e
