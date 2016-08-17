@@ -220,6 +220,7 @@ class BasicRouter(Router):
                         elif self.__status["commit"] is None:
                             self.__conn.sendline("exit")
                             self.__conn.prompt()
+                            self.__status['configure'] = "No"
                             return {"Result": "Exit configure mode successfully."}
                         else:
                             return {"Error": "You should commit first."}
