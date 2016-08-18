@@ -1,63 +1,62 @@
 # Copyright (c) 2016 Hochikong
-def ospfarea(obj, data):
+def ospfarea(obj, area, network_range):
     """This method provide a OSPF area configuration function
 
-    Parameter data example:
-    {'config':{'area':'0','network':'192.168.10.0/24'},
-    }
+    Parameter example:
+    'area':'0'
+    'network_range':'192.168.10.0/24'
 
-    :param obj: a connection object
-    :param data: a python dictionary
-    :return: a python dictionary
+    :param obj: A connection object
+    :param area: The ospf area number
+    :param network_range: The target network,don't forget the netmask
+    :return: A message or an error
     """
     ospf_basic_configuration = "set protocols ospf area %s network %s"
 
     try:
         # Configure ospf area
-        obj.sendline(ospf_basic_configuration % (data['config']['area'], data['config']['network']))
+        obj.sendline(ospf_basic_configuration % (area, network_range))
         obj.prompt()
         if len(obj.before) > obj.before.index('\r\n') + 2:
             return obj.before
         else:
-            return {"Result": "Configured successfully"}
+            return "Result : Configured successfully"
     except Exception as e:
-        return {"Error": e}
+        return e
 
 
-def router_id(obj, data):
+def ospf_router_id(obj, router_id):
     """This method provide a router id configuration function
 
-    Parameter data example:
-    {'config':{'id':'1.1.1.1'},
-    }
+    Parameter example:
+    '1.1.1.1'
 
     :param obj: a connection object
-    :param data: a python dictionary
-    :return: a python dictionary
+    :param router_id: The router id
+    :return: A message or an error
     """
     router_id_configuration = "set protocols ospf parameters router-id %s"
     try:
         # Configure router id
-        obj.sendline(router_id_configuration % data['config']['id'])
+        obj.sendline(router_id_configuration % router_id)
         obj.prompt()
         if len(obj.before) > obj.before.index('\r\n') + 2:
             return obj.before
         else:
-            return {"Result": "Configured successfully"}
+            return "Result : Configured successfully"
     except Exception as e:
-        return {"Error": e}
+        return e
 
 
-def ospf_redistribute(obj, data):
+def ospf_redistribute(obj, metric_type):
     """This method provide a router redistribute function
 
-    Parameter data example:
-    {'config':{'type':'2'},
-    }
+    Parameter example:
+    '2'
 
-    :param obj: a connection object
-    :param data: a python dictionary
-    :return: a python dictionary
+    :param obj: A connection object
+    :param metric_type: The metric-type
+    :return: A message or an error
     """
     redistribute_configuration = {"0": "set protocols ospf redistribute connected metric-type %s",
                                   "1": "set protocols ospf redistribute connected route-map CONNECT",
@@ -65,7 +64,7 @@ def ospf_redistribute(obj, data):
     try:
         reg = 0
         error_message = []
-        obj.sendline(redistribute_configuration['0'] % data['config']['type'])
+        obj.sendline(redistribute_configuration['0'] % metric_type)
         obj.prompt()
         if len(obj.before) > obj.before.index('\r\n') + 2:
             error_message.append(obj.before)
@@ -78,16 +77,16 @@ def ospf_redistribute(obj, data):
         if reg > 0:
             return error_message
         else:
-            return {"Result": "Configured successfully"}
+            return "Result : Configured successfully"
     except Exception as e:
-        return {"Error": e}
+        return e
 
 
 def ospf_adjacency(obj):
-    """This method sendline : set protocols ospf log-adjacency-changes
+    """This method execute : set protocols ospf log-adjacency-changes
 
     :param obj: a connection object
-    :return: a python dictionary
+    :return: A message or an error
     """
     log_adjacency_changes_configuration = "set protocols ospf log-adjacency-changes"
     try:
@@ -96,22 +95,22 @@ def ospf_adjacency(obj):
         if len(obj.before) > obj.before.index('\r\n') + 2:
             return obj.before
         else:
-            return {"Result": "Configured successfully"}
+            return "Result : Configured successfully"
     except Exception as e:
-        return {"Error": e}
+        return e
 
 
-def ospf_default_route(obj, data):
-    """This method sendline : set protocols ospf default-information originate always
-    and other commands
+def ospf_default_route(obj, metric, metric_type):
+    """This method execute the commands to configure default route
 
-    Parameter data example:
-    {'config':{'metric':'10','metric-type':'2'},
-    }
+    Parameter example:
+    'metric':'10'
+    'metric-type':'2'
 
-    :param obj: a connection object
-    :param data: a python dictionary
-    :return: a python dictionary
+    :param obj: A connection object
+    :param metric: The metric,a number
+    :param metric_type: The metric-type
+    :return: A message or an error
     """
     default_route_configuration = {"0": "set protocols ospf default-information originate always",
                                    "1": "set protocols ospf default-information originate metric %s",
@@ -125,12 +124,12 @@ def ospf_default_route(obj, data):
         if len(obj.before) > obj.before.index('\r\n') + 2:
             error_messsage.append(obj.before)
             reg += 1
-        obj.sendline(default_route_configuration['1'] % data['config']['metric'])
+        obj.sendline(default_route_configuration['1'] % metric)
         obj.prompt()
         if len(obj.before) > obj.before.index('\r\n') + 2:
             error_messsage.append(obj.before)
             reg += 1
-        obj.sendline(default_route_configuration['2'] % data['config']['metric-type'])
+        obj.sendline(default_route_configuration['2'] % metric_type)
         obj.prompt()
         if len(obj.before) > obj.before.index('\r\n') + 2:
             error_messsage.append(obj.before)
@@ -138,21 +137,22 @@ def ospf_default_route(obj, data):
         if reg > 0:
             return error_messsage
         else:
-            return {"Result": "Configured successfully"}
+            return "Result : Configured successfully"
     except Exception as e:
-        return {"Error": e}
+        return e
 
 
-def ospf_route_map(obj, data):
-    """This method used for VyOS route-map setting when you configure a OSPF router
+def ospf_route_map(obj, rule, interface):
+    """This method is used for VyOS route-map setting when you configure a OSPF router
 
-    Parameter data example:
-    {'config':{'rule':'10','interface':'lo'},
-    }
+    Parameter example:
+    'rule':'10'
+    'interface':'lo'
 
-    :param obj: a connection object
-    :param data: a python dictionary
-    :return: a python dictionary
+    :param obj: A connection object
+    :param rule: The route-map rule number
+    :param interface: The interface name
+    :return: A message or an error
     """
     route_map_configuration = {"0": "set policy route-map CONNECT rule %s action permit",
                                "1": "set policy route-map CONNECT rule %s match interface %s",
@@ -160,12 +160,12 @@ def ospf_route_map(obj, data):
     try:
         reg = 0
         error_messsage = []
-        obj.sendline(route_map_configuration['0'] % data['config']['rule'])
+        obj.sendline(route_map_configuration['0'] % rule)
         obj.prompt()
         if len(obj.before) > obj.before.index('\r\n') + 2:
             error_messsage.append(obj.before)
             reg += 1
-        obj.sendline(route_map_configuration['1'] % (data['config']['rule'], data['config']['interface']))
+        obj.sendline(route_map_configuration['1'] % (rule, interface))
         obj.prompt()
         if len(obj.before) > obj.before.index('\r\n') + 2:
             error_messsage.append(obj.before)
@@ -173,6 +173,6 @@ def ospf_route_map(obj, data):
         if reg > 0:
             return error_messsage
         else:
-            return {"Result": "Configured successfully"}
+            return "Result : Configured successfully"
     except Exception as e:
-        return {"Error": e}
+        return e

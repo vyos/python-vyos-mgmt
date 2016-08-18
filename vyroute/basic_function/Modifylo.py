@@ -1,25 +1,24 @@
 # Copyright (c) 2016 Hochikong
-def modifylo(obj, data):
+def modifylo(obj, lo_address):
     """This method provide a loopback address configuration function
 
-    Parameter data example:
-    {'config':'1.1.1.1/32'
-    }
+    Parameter example:
+    '1.1.1.1/32'
 
-    :param obj: a connection object
-    :param data: a python dictionary
-    :return: a python dictionary
+    :param obj: A connection object
+    :param lo_address: The target address you want.Don't forget the netmask
+    :return: A message or an error
     """
 
     lo_basic_configuration = "set interfaces loopback lo address %s"
 
     try:
         # Configure loopback interface lo address
-        obj.sendline(lo_basic_configuration % data['config'])
+        obj.sendline(lo_basic_configuration % lo_address)
         obj.prompt()
         if len(obj.before) > obj.before.index('\r\n') + 2:
             return obj.before
         else:
-            return {"Result": "Modify successfully."}
+            return "Result : Add successfully."
     except Exception as e:
-        return {'Error': e}
+        return e

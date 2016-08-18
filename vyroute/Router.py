@@ -10,62 +10,7 @@ from vyroute.basic_function import BGPRoute
 
 
 class Router(object):
-    # Static router configuration func
-    def static_route(self, data):
-        pass
-
-    # RIP router configuration func
-    def rip_route(self, data):
-        pass
-
-    # OSPF router configuration func
-    def ospf_area(self, data):
-        pass
-
-    def router_id(self, data):
-        pass
-
-    def ospf_redistribute(self, data):
-        pass
-
-    def ospf_adjacency(self):
-        pass
-
-    def ospf_default_route(self, data):
-        pass
-
-    def ospf_route_map(self, data):
-        pass
-
-    # Interfaces configuration func
-    def lo(self, data):
-        pass
-
-    def delete_route(self, data):
-        pass
-
-    # Basic VyOS configuration func
-    def status(self):
-        pass
-
-    def configure(self):
-        pass
-
-    def commit_config(self):
-        pass
-
-    def save_config(self):
-        pass
-
-    def exit_config(self):
-        pass
-
-    # Login and logout a router
-    def login(self):
-        pass
-
-    def logout(self):
-        pass
+    pass
 
 
 class BasicRouter(Router):
@@ -84,45 +29,44 @@ class BasicRouter(Router):
         self.__status = {"status": None, "commit": None, "save": None, "configure": None}
 
     def status(self):
-        """Check the router inner status
+        """Check the router object inner status
 
-        :return: a python dictionary
+        :return: A python dictionary include the status of the router object
         """
         return self.__status
 
     def login(self):
         """Login the router
 
-        :return: a python dictionary
+        :return: A message or an error
         """
         try:
             if self.__conn.login(self.__address, self.__username, self.__passwd) is True:
                 self.__status["status"] = "login"
-                return {"Result": "Login successfully."}
+                return "Result : Login successfully."
             else:
-                return {"Error": "Connect Failed."}
+                return "Error : Connect Failed."
         except Exception as e:
-            return {"Error": e}
+            return e
 
     def logout(self):
         """Logout the router
-        Attention! If you logout,you can not reuse this Router object.You should create a new BasicRouter
 
-        :return: a python dictionary
+        :return: A message or an error
         """
         try:
             self.__conn.close()
             self.__status["status"] = "logout"
             self.__status["configure"] = None
             self.__conn = pxssh()
-            return {"Result": "Logout successfully."}
+            return "Result : Logout successfully."
         except Exception as e:
-            return {"Error": e}
+            return e
 
     def configure(self):
         """Enter the VyOS configure mode
 
-        :return: a python dictionary
+        :return: A message or an error
         """
         try:
             if self.__status["status"] == "login":
@@ -131,70 +75,72 @@ class BasicRouter(Router):
                     self.__conn.prompt(0)
                     self.__conn.set_unique_prompt()
                     self.__status["configure"] = "Yes"
-                    return {"Result": "Active configure mode successfully."}
+                    return "Result : Active configure mode successfully."
                 else:
-                    return {"Error": "In configure mode now!"}
+                    return "Error : In configure mode now!"
             else:
-                return {"Error": "Router object not connect to a router."}
+                return "Error : Router object not connect to a router."
         except Exception as e:
-            return {"Error": e}
+            return e
 
-    def commit_config(self):
+    def commit(self):
         """Commit the configuration changes
 
-        :return: a python dictionary
+        :return: A message or an error
         """
         try:
             if self.__status["status"] == "login":
                 if self.__status["configure"] == "Yes":
                     if self.__status["commit"] is None:
-                        return {"Error": "You don't need to commit."}
+                        return "Error : You don't need to commit."
                     if self.__status["commit"] == "No":
                         self.__conn.sendline("commit")
                         self.__conn.prompt()
                         self.__status["commit"] = "Yes"
-                        return {"Result": "Commit successfully."}
+                        return "Result : Commit successfully."
                     else:
-                        return {"Error": "You have committed!"}
+                        return "Error : You have committed!"
                 else:
-                    return {"Error": "Router not in configure mode!"}
+                    return "Error : Router not in configure mode!"
             else:
-                return {"Error": "Router object not connect to a router."}
+                return "Error : Router object not connect to a router."
         except Exception as e:
-            return {"Error": e}
+            return e
 
-    def save_config(self):
+    def save(self):
         """Save the configuration after commit
 
-        :return: a python dictionary
+        :return: A message or an error
         """
         try:
             if self.__status["status"] == "login":
                 if self.__status["configure"] == "Yes":
                     if self.__status["commit"] == "Yes":
                         if self.__status["save"] is None:
-                            return {"Error": "You don't need to save."}
+                            return "Error : You don't need to save."
                         if self.__status["save"] == "No":
                             self.__conn.sendline("save")
-                            self.__conn.prompt()
+                            self.__conn.prompt(0)
                             self.__status["save"] = "Yes"
-                            return {"Result": "Save successfully."}
+                            return "Result : Save successfully."
                         else:
-                            return {"Error": "You have saved!"}
+                            return "Error : You have saved!"
+                    elif self.__status["commit"] is None:
+                        return "Error : You don't need to save."
                     else:
-                        return {"Error": "You need to commit first!"}
+                        return "Error : You need to commit first!"
                 else:
-                    return {"Error": "Router not in configure mode!"}
+                    return "Error : Router not in configure mode!"
             else:
-                return {"Error": "Router object not connect to a router."}
+                return "Error : Router object not connect to a router."
         except Exception as e:
-            return {"Error": e}
+            return e
 
-    def exit_config(self, force=False):
+    def exit(self, force=False):
         """Exit VyOS configure mode
 
         :param force: True or False
-        :return: a python dictionary
+        :return: A message or an error
         """
         try:
             if self.__status["status"] == "login":
@@ -205,7 +151,7 @@ class BasicRouter(Router):
                         self.__status["configure"] = "No"
                         self.__status["save"] = None
                         self.__status["commit"] = None
-                        return {"Result": "Exit configure mode successfully."}
+                        return "Result : Exit configure mode successfully."
                     else:
                         if self.__status["commit"] == "Yes":
                             if self.__status["save"] == "Yes":
@@ -214,37 +160,36 @@ class BasicRouter(Router):
                                 self.__status["configure"] = "No"
                                 self.__status["save"] = None
                                 self.__status["commit"] = None
-                                return {"Result": "Exit configure mode successfully."}
+                                return "Result : Exit configure mode successfully."
                             else:
-                                return {"Error": "You should save first."}
+                                return "Error : You should save first."
                         elif self.__status["commit"] is None:
                             self.__conn.sendline("exit")
                             self.__conn.prompt()
                             self.__status['configure'] = "No"
-                            return {"Result": "Exit configure mode successfully."}
+                            return "Result : Exit configure mode successfully."
                         else:
-                            return {"Error": "You should commit first."}
+                            return "Error : You should commit first."
                 else:
-                    return {"Error": "You are not in configure mode,need not exit."}
+                    return "Error : You are not in configure mode,need not exit."
             else:
-                return {"Error": "Router object not connect to a router."}
+                return "Error : Router object not connect to a router."
         except Exception as e:
-            return {"Error": e}
+            return e
 
-    def lo(self, data):
-        """Modify a router loopback address
+    def lo(self, lo_address):
+        """Add a router loopback address
 
-        Parameter data example:
-        {'config':'1.1.1.1/32'
-        }
+        Parameter example:
+        '1.1.1.1/32'
 
-        :param data: a python dictionary
-        :return: a python dictionary
+        :param lo_address: The target address you want.Don't forget the netmask
+        :return: A message or an error
         """
         try:
             if self.__status["status"] == "login":
                 if self.__status["configure"] == "Yes":
-                    res = Modifylo.modifylo(self.__conn, data)
+                    res = Modifylo.modifylo(self.__conn, lo_address)
                     if "Result" in res:
                         if self.__status["commit"] == "No":
                             pass
@@ -258,59 +203,31 @@ class BasicRouter(Router):
                     else:
                         return res
                 else:
-                    return {"Error": "You are not in configure mode."}
+                    return "Error : You are not in configure mode."
             else:
-                return {"Error": "Router object not connect to a router."}
+                return "Error : Router object not connect to a router."
         except Exception as e:
-            return {"Error": e}
+            return e
 
-    def delete_route(self, data):
-            """Delete router setting
+    def delete_route(self, route_type):
+        """Delete router configurations
 
-            Parameter data example:
-            {'config':'rip'/'static'/'ospf'/'all'
-            }
+        Parameter example:
+        'rip'/'static'/'ospf'/'bgp'/'all'
 
-            :param data: a python dictionary
-            :return: a python dictionary
-            """
-            try:
-                if self.__status["status"] == "login":
-                    if self.__status["configure"] == "Yes":
-                        res = DeleteRoute.deleteroute(self.__conn, data)
-                        if "Result" in res:
-                            if self.__status["commit"] == "No":
-                                pass
-                            else:
-                                self.__status["commit"] = "No"
-                            if self.__status["save"] == "No":
-                                pass
-                            else:
-                                self.__status["save"] = "No"
-                            return res
-                        else:
-                            return res
-                    else:
-                        return {"Error": "You are not in configure mode."}
-                else:
-                    return {"Error": "Router object not connect to a router."}
-            except Exception as e:
-                return {"Error": e}
+        WARNING!
+        When you use this function,please don't forget this func will delete all same type
+        router configuration,when your 'config' in data is 'rip',it will delete all rip router setting.
+        If you do not want your setting disappear,you can delete router configuration manually or rewrite
+        this func.
 
-    def static_route(self, data):
-        """Static router setting
-
-        Parameter data example:
-        {'config':{'target':'10.20.10.0/24','next-hop':'10.20.10.1','distance':'1'},
-        }
-
-        :param data: a python dictionary
-        :return: a python dictionary
+        :param route_type: Route type
+        :return: A message or an error
         """
         try:
             if self.__status["status"] == "login":
                 if self.__status["configure"] == "Yes":
-                    res = StaticRoute.staticroute(self.__conn, data)
+                    res = DeleteRoute.deleteroute(self.__conn, route_type)
                     if "Result" in res:
                         if self.__status["commit"] == "No":
                             pass
@@ -324,26 +241,29 @@ class BasicRouter(Router):
                     else:
                         return res
                 else:
-                    return {"Error": "You are not in configure mode."}
+                    return "Error : You are not in configure mode."
             else:
-                return {"Error": "Router object not connect to a router."}
+                return "Error : Router object not connect to a router."
         except Exception as e:
-            return {"Error": e}
+            return e
 
-    def rip_route(self, data):
-        """RIP protocols router setting
+    def static_route(self, network_range, next_hop, distance):
+        """This method provide a basic static router configuration function
 
-        Parameter data example:
-        {'config':'192.168.10.0/24',
-        }
+        Parameter example:
+        'network_range':'10.20.10.0/24'
+        'next-hop':'10.20.10.1'
+        'distance':'1'
 
-        :param data: a python dictionary
-        :return: a python dictionary
+        :param network_range: The target network,don't forget the netmask
+        :param next_hop: The next hop
+        :param distance: The distance
+        :return: A message or an error
         """
         try:
             if self.__status["status"] == "login":
                 if self.__status["configure"] == "Yes":
-                    res = RIPRoute.riproute(self.__conn, data)
+                    res = StaticRoute.staticroute(self.__conn, network_range, next_hop, distance)
                     if "Result" in res:
                         if self.__status["commit"] == "No":
                             pass
@@ -357,26 +277,25 @@ class BasicRouter(Router):
                     else:
                         return res
                 else:
-                    return {"Error": "You are not in configure mode."}
+                    return "Error : You are not in configure mode."
             else:
-                return {"Error": "Router object not connect to a router."}
+                return "Error : Router object not connect to a router."
         except Exception as e:
-            return {"Error": e}
+            return e
 
-    def ospf_area(self, data):
-        """OSPF area setting
+    def rip_network(self, network_range):
+        """RIP router network setting
 
-         Parameter data example:
-         {'config':{'area':'0','network':'192.168.10.0/24'},
-         }
+        Parameter example:
+        '10.20.10.0/24'
 
-        :param data: a python dictionary
-        :return: a python dictionary
+        :param network_range: The target network,don't forget the netmask
+        :return: A message or an error
         """
         try:
             if self.__status["status"] == "login":
                 if self.__status["configure"] == "Yes":
-                    res = OSPFRoute.ospfarea(self.__conn, data)
+                    res = RIPRoute.rip_network(self.__conn, network_range)
                     if "Result" in res:
                         if self.__status["commit"] == "No":
                             pass
@@ -390,26 +309,21 @@ class BasicRouter(Router):
                     else:
                         return res
                 else:
-                    return {"Error": "You are not in configure mode."}
+                    return "Error : You are not in configure mode."
             else:
-                return {"Error": "Router object not connect to a router."}
+                return "Error : Router object not connect to a router."
         except Exception as e:
-            return {"Error": e}
+            return e
 
-    def router_id(self, data):
-        """OSPF router id setting
+    def rip_redistribute(self):
+        """Execute 'set protocols rip redistribute connected' command
 
-        Parameter data example:
-        {'config':{'id':'1.1.1.1'},
-        }
-
-        :param data: a python dictionary
-        :return: a python dictionary
+        :return: A message or an error
         """
         try:
             if self.__status["status"] == "login":
                 if self.__status["configure"] == "Yes":
-                    res = OSPFRoute.router_id(self.__conn, data)
+                    res = RIPRoute.rip_redistribute(self.__conn)
                     if "Result" in res:
                         if self.__status["commit"] == "No":
                             pass
@@ -423,26 +337,91 @@ class BasicRouter(Router):
                     else:
                         return res
                 else:
-                    return {"Error": "You are not in configure mode."}
+                    return "Error : You are not in configure mode."
             else:
-                return {"Error": "Router object not connect to a router."}
+                return "Error : Router object not connect to a router."
         except Exception as e:
-            return {"Error": e}
+            return e
 
-    def ospf_redistribute(self, data):
+    def ospf_area(self, area, network_range):
+        """This method provide a OSPF area configuration function
+
+        Parameter example:
+        'area':'0'
+        'network_range':'192.168.10.0/24'
+
+        :param area: The ospf area number
+        :param network_range: The target network,don't forget the netmask
+        :return: A message or an error
+        """
+        try:
+            if self.__status["status"] == "login":
+                if self.__status["configure"] == "Yes":
+                    res = OSPFRoute.ospfarea(self.__conn, area, network_range)
+                    if "Result" in res:
+                        if self.__status["commit"] == "No":
+                            pass
+                        else:
+                            self.__status["commit"] = "No"
+                        if self.__status["save"] == "No":
+                            pass
+                        else:
+                            self.__status["save"] = "No"
+                        return res
+                    else:
+                        return res
+                else:
+                    return "Error : You are not in configure mode."
+            else:
+                return "Error : Router object not connect to a router."
+        except Exception as e:
+            return e
+
+    def ospf_router_id(self, router_id):
+        """This method provide a router id configuration function
+
+        Parameter example:
+        '1.1.1.1'
+
+        :param router_id: The router id
+        :return: A message or an error
+        """
+        try:
+            if self.__status["status"] == "login":
+                if self.__status["configure"] == "Yes":
+                    res = OSPFRoute.ospf_router_id(self.__conn, router_id)
+                    if "Result" in res:
+                        if self.__status["commit"] == "No":
+                            pass
+                        else:
+                            self.__status["commit"] = "No"
+                        if self.__status["save"] == "No":
+                            pass
+                        else:
+                            self.__status["save"] = "No"
+                        return res
+                    else:
+                        return res
+                else:
+                    return "Error : You are not in configure mode."
+            else:
+                return "Error : Router object not connect to a router."
+        except Exception as e:
+            return e
+
+    def ospf_redistribute(self, metric_type):
         """OSPF redistribute setting
 
-        Parameter data example:
-        {'config':{'type':'2'},
-        }
+        Parameter example:
+        '2'
 
-        :param data: a python dictionary
-        :return: a python dictionary
+        :param metric_type: The metric-type
+        :return: A message or an error
         """
         try:
             if self.__status["status"] == "login":
                 if self.__status["configure"] == "Yes":
-                    res = OSPFRoute.ospf_redistribute(self.__conn, data)
+                    res = OSPFRoute.ospf_redistribute(self.__conn, metric_type)
                     if "Result" in res:
                         if self.__status["commit"] == "No":
                             pass
@@ -456,16 +435,16 @@ class BasicRouter(Router):
                     else:
                         return res
                 else:
-                    return {"Error": "You are not in configure mode."}
+                    return "Error : You are not in configure mode."
             else:
-                return {"Error": "Router object not connect to a router."}
+                return "Error : Router object not connect to a router."
         except Exception as e:
-            return {"Error": e}
+            return e
 
     def ospf_adjacency(self):
-        """set protocols ospf log-adjacency-changes
+        """Execute 'Set protocols ospf log-adjacency-changes' command
 
-        :return: a python dictionary
+        :return: A message or an error
         """
         try:
             if self.__status["status"] == "login":
@@ -484,26 +463,27 @@ class BasicRouter(Router):
                     else:
                         return res
                 else:
-                    return {"Error": "You are not in configure mode."}
+                    return "Error : You are not in configure mode."
             else:
-                return {"Error": "Router object not connect to a router."}
+                return "Error : Router object not connect to a router."
         except Exception as e:
-            return {"Error": e}
+            return e
 
-    def ospf_default_route(self, data):
-        """set protocols ospf default-information originate always (and other 2 commands)
+    def ospf_default_route(self, metric, metric_type):
+        """This method execute the commands to configure default route
 
-        Parameter data example:
-        {'config':{'metric':'10','metric-type':'2'},
-        }
+        Parameter example:
+        'metric':'10'
+        'metric-type':'2'
 
-        :param data: a python dictionary
-        :return: a python dictionary
+        :param metric: The metric,a number
+        :param metric_type: The metric-type
+        :return: A message or an error
         """
         try:
             if self.__status["status"] == "login":
                 if self.__status["configure"] == "Yes":
-                    res = OSPFRoute.ospf_default_route(self.__conn, data)
+                    res = OSPFRoute.ospf_default_route(self.__conn, metric, metric_type)
                     if "Result" in res:
                         if self.__status["commit"] == "No":
                             pass
@@ -517,26 +497,27 @@ class BasicRouter(Router):
                     else:
                         return res
                 else:
-                    return {"Error": "You are not in configure mode."}
+                    return "Error : You are not in configure mode."
             else:
-                return {"Error": "Router object not connect to a router."}
+                return "Error : Router object not connect to a router."
         except Exception as e:
-            return {"Error": e}
+            return e
 
-    def ospf_route_map(self, data):
+    def ospf_route_map(self, rule, interface):
         """VyOS route-map setting when you configure a OSPF router
 
-        Parameter data example:
-        {'config':{'rule':'10','interface':'lo'},
-        }
+        Parameter example:
+        'rule':'10'
+        'interface':'lo'
 
-        :param data: a python dictionary
-        :return: a python dictionary
+        :param rule: The route-map rule number
+        :param interface: The interface name
+        :return: A message or an error
         """
         try:
             if self.__status["status"] == "login":
                 if self.__status["configure"] == "Yes":
-                    res = OSPFRoute.ospf_route_map(self.__conn, data)
+                    res = OSPFRoute.ospf_route_map(self.__conn, rule, interface)
                     if "Result" in res:
                         if self.__status["commit"] == "No":
                             pass
@@ -550,21 +531,28 @@ class BasicRouter(Router):
                     else:
                         return res
                 else:
-                    return {"Error": "You are not in configure mode."}
+                    return "Error : You are not in configure mode."
             else:
-                return {"Error": "Router object not connect to a router."}
+                return "Error : Router object not connect to a router."
         except Exception as e:
-            return {"Error": e}
+            return e
 
-    def bgp_as(self, self_as, neighbor, multihop, remote_as, update_source):
+    def bgp_route(self, self_as, neighbor, multihop, remote_as, update_source):
         """VyOS BGP router basic setting
+
+        Parameter example:
+        'self_as':'65538'
+        'neighbor':'192.168.10.5'
+        'multihop':'2'
+        'remote_as':'65537'
+        'update_source':'192.168.10.6'
 
         :param self_as: The AS number of the router you login
         :param neighbor: The neighbor router address
         :param multihop: The amount of hops
         :param remote_as: The remote AS number
         :param update_source: The update source
-        :return: A message
+        :return: A message or an error
         """
         try:
             if self.__status["status"] == "login":
@@ -583,18 +571,22 @@ class BasicRouter(Router):
                     else:
                         return res
                 else:
-                    return "Error:You are not in configure mode."
+                    return "Error : You are not in configure mode."
             else:
-                return "Error:Router object not connect to a router."
+                return "Error : Router object not connect to a router."
         except Exception as e:
             return e
 
     def bgp_network(self, self_as, network_range):
         """Add a network to BGP router
 
+        Parameter example:
+        'self_as':'65538'
+        'network_range':'10.20.10.0/24'
+
         :param self_as: The AS number of the router you login
         :param network_range: The target network,don't forget the netmask
-        :return: A message
+        :return: A message or an error
         """
         try:
             if self.__status["status"] == "login":
@@ -613,18 +605,22 @@ class BasicRouter(Router):
                     else:
                         return res
                 else:
-                    return "Error:You are not in configure mode."
+                    return "Error : You are not in configure mode."
             else:
-                return "Error:Router object not connect to a router."
+                return "Error : Router object not connect to a router."
         except Exception as e:
             return e
 
     def bgp_router_id(self, self_as, router_id):
         """Set a router id for the router you login
 
+        Parameter example:
+        'self_as':'65538'
+        'router_id':'10.20.10.0'
+
         :param self_as: The AS number of the router you login
         :param router_id: The router id,or you can use the router address as router id
-        :return: A message
+        :return: A message or an error
         """
         try:
             if self.__status["status"] == "login":
@@ -643,17 +639,20 @@ class BasicRouter(Router):
                     else:
                         return res
                 else:
-                    return "Error:You are not in configure mode."
+                    return "Error : You are not in configure mode."
             else:
-                return "Error:Router object not connect to a router."
+                return "Error : Router object not connect to a router."
         except Exception as e:
             return e
 
     def bgp_blackhole_route(self, network_range):
         """Set a blackhole route
 
+        Parameter example:
+        '10.20.10.0/24'
+
         :param network_range: The target network,don't forget the netmask
-        :return: A message
+        :return: A message or an error
         """
         try:
             if self.__status["status"] == "login":
@@ -672,8 +671,8 @@ class BasicRouter(Router):
                     else:
                         return res
                 else:
-                    return "Error:You are not in configure mode."
+                    return "Error : You are not in configure mode."
             else:
-                return "Error:Router object not connect to a router."
+                return "Error : Router object not connect to a router."
         except Exception as e:
             return e

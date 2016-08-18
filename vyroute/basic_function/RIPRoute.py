@@ -1,34 +1,42 @@
 # Copyright (c) 2016 Hochikong
-def riproute(obj, data):
-    """This method provide a RIP protocols router configuration function
+def rip_network(obj, network_range):
+    """This method provide a RIP router network configuration function
 
-    Parameter data example:
-    {'config':'192.168.10.0/24',
-    }
+    Parameter example:
+    '10.20.10.0/24'
 
-    :param obj: a connection object
-    :param data: a python dictionary
-    :return: a python dictionary
+    :param obj: A connection object
+    :param network_range: The target network,don't forget the netmask
+    :return: A message or an error
     """
     rip_basic_configuration = "set protocols rip network %s"
-    redistribute_configuration = "set protocols rip redistribute connected"
+
     try:
         # Configure RIP router
-        reg = 0
-        error_messsage = []
-        obj.execute(rip_basic_configuration % data['config'])
+        obj.sendline(rip_basic_configuration % network_range)
         obj.prompt()
         if len(obj.before) > obj.before.index('\r\n') + 2:
-            error_messsage.append(obj.before)
-            reg += 1
-        obj.execute(redistribute_configuration)
-        obj.prompt()
-        if len(obj.before) > obj.before.index('\r\n') + 2:
-            error_messsage.append(obj.before)
-            reg += 1
-        if reg > 0:
-            return error_messsage
+            return obj.before
         else:
-            return {"Result": "Configured successfully"}
+            return "Result : Configured successfully"
     except Exception as e:
-        return {"Error": e}
+        return e
+
+
+def rip_redistribute(obj):
+    """Execute 'set protocols rip redistribute connected' command
+
+    :param obj: A connection object
+    :return: A message or an error
+    """
+    redistribute_configuration = "set protocols rip redistribute connected"
+
+    try:
+        obj.sendline(redistribute_configuration)
+        obj.prompt()
+        if len(obj.before) > obj.before.index('\r\n') + 2:
+            return obj.before
+        else:
+            return "Result : Configured successfully"
+    except Exception as e:
+        return e
