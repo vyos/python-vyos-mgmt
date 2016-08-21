@@ -2,17 +2,17 @@
 
 from setuptools import setup, find_packages
 setup(
-    name="vyroute",
+    name="vymgmt",
     version="0.1",
     packages=find_packages(),
     install_requires=['pexpect'],
 
-    description="A library for VyOS routing setting",
-    long_description="A library for VyOS routing setting",
+    description="A library for VyOS configurations",
+    long_description="A library for VyOS configurations",
     author="Hochikong",
-    author_email="michellehzg@gmail.com",
+    author_email="hochikong@foxmail.com",
 
     license="MIT",
-    keywords="A library for VyOS routing setting",
+    keywords="A library for VyOS configurations",
     url="https://github.com/vyos/python-vyos-mgmt"
 )
