@@ -42,7 +42,7 @@ Because we have save the configuration,so if you reboot the VyOS system but the 
 
 If you change the configuration,you must commit and save it then you can exit configure mode.But you can use vyos.exit(force=Ture) to execute "exit discard" command. 
 
-##Something you may know
+##Something you should know
 1.Only admin level user can use this library to login and execute all configuration methods.  
 
 2.When you initialize the Router class,the second parameters is 'username:password'.  
