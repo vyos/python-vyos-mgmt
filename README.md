@@ -1,7 +1,9 @@
 #VyMGMT
 A python library for VyOS configurations
 
-This python library is used for VyOS configurations.Use this library to send the configuration to VyOS. 
+This python library is used for VyOS configurations.  
+
+Use this library to send the configuration commands to VyOS. 
 
 ##Note
 ###Version:0.1 
@@ -107,19 +109,19 @@ config: "interfaces ethernet eth0 description 'eth0'"
 The minimal configuration method.
 
 #Exceptions
-##vymgmt.base\_exception.exception\_for\_commit.CommitFailed()
+##vymgmt.base\_exceptions.exceptions\_for\_commit.CommitFailed()
 
 This exception class is for commit() failures due to some mistakes in your configurations.  
 
 When this exception raise,the error message from VyOS will displayed.
 
-##vymgmt.base\_exception.exception\_for\_commit.CommitConflict()
+##vymgmt.base\_exceptions.exceptions\_for\_commit.CommitConflict()
 
 This exception class is for commit() failures due to the commit conflicts when more than one users committing their configurations at the same time.
 
 When this exception raise,the error message from VyOS will displayed.
  
-##vymgmt.base\_exception.exceptions\_for\_set\_and\_delete.ConfigPathError()
+##vymgmt.base\_exceptions.exceptions\_for\_set\_and\_delete.ConfigPathError()
 
 This exception class is for set() and delete() failures due to configuration path error.  
 
@@ -140,7 +142,7 @@ The wrong one will raise this exception and display the error message:
 
 When this exception raise,the error message from VyOS will displayed.
 
-##vymgmt.base\_exception.exceptions\_for\_set\_and\_delete.ConfigValueError()
+##vymgmt.base\_exceptions.exceptions\_for\_set\_and\_delete.ConfigValueError()
 
 This exception class is for set() and delete() failures due to value error.  
 
@@ -150,7 +152,7 @@ This exception will raise when your configuration has wrong value,such as:
 
 When this exception raise,the error message from VyOS will displayed.
 
-##vymgmt.base_exception.CommonError()
+##vymgmt.base_exceptions.CommonError()
 
 This exception class is for all failures which do not covered by exceptions above.
 

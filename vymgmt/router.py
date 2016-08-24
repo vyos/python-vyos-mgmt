@@ -2,10 +2,10 @@
 
 
 from pxssh import pxssh
-from mgmt_common import messenger, committer
-from .base_exception.exceptions_for_set_and_delete import ConfigPathError, ConfigValueError
-from .base_exception.exception_for_commit import CommitFailed, CommitConflict
-from .base_exception.base import CommonError
+from .mgmt_common import messenger, committer
+from .base_exceptions.exceptions_for_set_and_delete import ConfigPathError, ConfigValueError
+from .base_exceptions.exceptions_for_commit import CommitFailed, CommitConflict
+from .base_exceptions.base import CommonError
 from .error_distinguish import distinguish_for_set, distinguish_for_delete, distinguish_for_commit
 
 
