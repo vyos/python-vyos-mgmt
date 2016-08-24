@@ -14,10 +14,10 @@ This python library is used for VyOS configurations.Use this library to send the
   
 ###Requirement:pexpect(pxssh)  
 
-##Basic example
+##Basic Example
 Set a description for eth0:   
 
-    >>> from vymgmt.Router import Router
+    >>> from vymgmt.router import Router
     >>> vyos = Router('192.168.225.2','vyos:vyos')
     >>> vyos.login()
     'Result : Login successfully.'
@@ -42,7 +42,14 @@ Because we have save the configuration,so if you reboot the VyOS system but the 
 
 If you change the configuration,you must commit and save it then you can exit configure mode.But you can use vyos.exit(force=Ture) to execute "exit discard" command. 
 
-#All methods
+##Something you may know
+1.Only admin level user can use this library to login and execute all configuration methods.  
+
+2.When you initialize the Router class,the second parameters is 'username:password'.  
+
+3.set() and delete() method is the core function of this library,you can just use a same configuration command on VyOS to set or delete a specify configuration.But you should take a look at the Basic Example and All Methods sections.  
+ 
+#All Methods
 ##status():
 Check the router object inner status.  
 
@@ -98,6 +105,57 @@ Example:
 config: "interfaces ethernet eth0 description 'eth0'"
 
 The minimal configuration method.
+
+#Exceptions
+##vymgmt.base\_exception.exception\_for\_commit.CommitFailed()
+
+This exception class is for commit() failures due to some mistakes in your configurations.  
+
+When this exception raise,the error message from VyOS will displayed.
+
+##vymgmt.base\_exception.exception\_for\_commit.CommitConflict()
+
+This exception class is for commit() failures due to the commit conflicts when more than one users committing their configurations at the same time.
+
+When this exception raise,the error message from VyOS will displayed.
+ 
+##vymgmt.base\_exception.exceptions\_for\_set\_and\_delete.ConfigPathError()
+
+This exception class is for set() and delete() failures due to configuration path error.  
+
+What is configuration path error?
+
+This configuration is correct:
+
+	vyos.set("protocols rip network xxx")
+
+This is wrong:
+
+	vyos.delete("ethernet interface eth1 address")
+
+The wrong one will raise this exception and display the error message:
+
+	Configuration path: [ethernet] is not valid
+  	Delete failed
+
+When this exception raise,the error message from VyOS will displayed.
+
+##vymgmt.base\_exception.exceptions\_for\_set\_and\_delete.ConfigValueError()
+
+This exception class is for set() and delete() failures due to value error.  
+
+This exception will raise when your configuration has wrong value,such as:
+
+	vyos.set("interfaces ethernet eth1 address '192.168.225.2")   #No netmask
+
+When this exception raise,the error message from VyOS will displayed.
+
+##vymgmt.base_exception.CommonError()
+
+This exception class is for all failures which do not covered by exceptions above.
+
+When this exception raise,the error message from VyOS will displayed. 
+
 
 
 
