@@ -1,7 +1,12 @@
 # Copyright (c) 2016 Hochikong
 
+
 from pxssh import pxssh
-from .mgmt_common import messenger
+from mgmt_common import messenger, committer
+from .base_exception.exceptions_for_set_and_delete import ConfigPathError, ConfigValueError
+from .base_exception.exception_for_commit import CommitFailed, CommitConflict
+from .base_exception.base import CommonError
+from .error_distinguish import distinguish_for_set, distinguish_for_delete, distinguish_for_commit
 
 
 class Router(object):
@@ -86,18 +91,25 @@ class Router(object):
                     if self.__status["commit"] is None:
                         return "Error : You don't need to commit."
                     if self.__status["commit"] == "No":
-                        self.__conn.sendline("commit")
-                        self.__conn.prompt()
-                        self.__status["commit"] = "Yes"
-                        return "Result : Commit successfully."
+                        res = committer(self.__conn, "commit")
+                        if "Result" in res:
+                            self.__status["commit"] = "Yes"
+                            return "Result : Commit successfully."
+                        else:
+                            result = distinguish_for_commit(res)
                     else:
-                        return "Error : You have committed!"
+                        return "Error : You have commit!"
                 else:
                     return "Error : Router not in configure mode!"
             else:
                 return "Error : Router object not connect to a router."
         except Exception as e:
             return e
+
+        if result == "CommitFailed":
+            raise CommitFailed(res)
+        elif result == "CommitConflict":
+            raise CommitConflict(res)
 
     def save(self):
         """Save the configuration after commit
@@ -192,13 +204,20 @@ class Router(object):
                             self.__status["save"] = "No"
                         return res
                     else:
-                        return res
+                        result = distinguish_for_set(res)
                 else:
                     return "Error : You are not in configure mode."
             else:
                 return "Error : Router object not connect to a router."
         except Exception as e:
             return e
+
+        if result == "ConfigPathError":
+            raise ConfigPathError(res)
+        elif result == "ConfigValueError":
+            raise ConfigValueError(res)
+        elif result == "NonsupportButError":
+            raise CommonError(res)
 
     def delete(self, config):
         """Basic 'delete' method,execute the delete command in VyOS
@@ -223,10 +242,17 @@ class Router(object):
                             self.__status["save"] = "No"
                         return res
                     else:
-                        return res
+                        result = distinguish_for_delete(res)
                 else:
                     return "Error : You are not in configure mode."
             else:
                 return "Error : Router object not connect to a router."
         except Exception as e:
             return e
+
+        if result == "ConfigPathError":
+            raise ConfigPathError(res)
+        elif result == "ConfigValueError":
+            raise ConfigValueError(res)
+        elif result == "NonsupportButError":
+            raise CommonError(res)
