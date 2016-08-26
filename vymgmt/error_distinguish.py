@@ -7,7 +7,7 @@ def distinguish_for_set(message):
     :param message: A error message string from VyOS
     :return: The type of error
     """
-    path_error_string = ['Configuration path:', 'is not valid']
+    path_error_string = ['Configuration path:', 'is not valid', 'already exists']
     value_error_string = ['Value validation failed']
     all_strings = [path_error_string, value_error_string]
     condition = 0
@@ -31,7 +31,8 @@ def distinguish_for_delete(message):
     :return: The type of error
     """
     path_error_string = ['Configuration path:', 'is not valid', 'Delete failed']
-    value_error_string = ['Nothing to delete', 'the specified value does not exist']
+    value_error_string = ['Nothing to delete', 'the specified value does not exist',
+                          "the specified node does not exist"]
     all_strings = [path_error_string, value_error_string]
     condition = 0
 

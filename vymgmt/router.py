@@ -52,6 +52,15 @@ class Router(object):
         :return: A message or an error
         """
         try:
+            if self.__status["commit"] == "No":
+                return "Error : You should commit and exit configure mode first."
+
+            if self.__status["save"] == "No":
+                return "Error : You should save and exit configure mode first."
+
+            if self.__status["configure"] == "Yes":
+                return "Error : You should exit configure mode first."
+
             self.__conn.close()
             self.__status["status"] = "logout"
             self.__status["configure"] = None
