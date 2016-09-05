@@ -16,29 +16,28 @@ Use this library to send the configuration commands to VyOS.
   
 ###Requirement:pexpect(pxssh)  
 
+###Platform:Python2 and 3
+
 ##Basic Example
 Set a description for eth0:   
 
     >>> from vymgmt.router import Router
     >>> vyos = Router('192.168.225.2','vyos:vyos')
     >>> vyos.login()
-    'Result : Login successfully.'
     >>> vyos.configure()
-    'Result : Active configure mode successfully.'
     >>> vyos.set("interfaces ethernet eth0 description 'eth0'")
-    'Result : Configured successfully'
-    >>> vyos.commit()
-    'Result : Commit successfully.'
     >>> vyos.status()
-    {'status': 'login', 'commit': 'Yes', 'save': 'No', 'configure': 'Yes'}
-    >>> vyos.exit()
-    'Error : You should save first.'
+    {'save': 'No', 'status': 'login', 'configure': 'Yes', 'commit': 'No'}
+    >>> vyos.commit()
+    >>> vyos.status()
+    {'save': 'No', 'status': 'login', 'configure': 'Yes', 'commit': 'Yes'}
     >>> vyos.save()
-    'Result : Save successfully.'
+    >>> vyos.status()
+    {'save': 'Yes', 'status': 'login', 'configure': 'Yes', 'commit': 'Yes'}
     >>> vyos.exit()
-    'Result : Exit configure mode successfully.'
     >>> vyos.logout()
-    'Result : Logout successfully.'
+    >>> vyos.status()
+    {'save': None, 'status': 'logout', 'configure': None, 'commit': None}
 
 Because we have save the configuration,so if you reboot the VyOS system but the static router still works.
 
@@ -78,14 +77,12 @@ You should import class Router from vymgmt.router,the use address and "username:
 Then,you can use login() to login vyos1:
 	
 	>>> vyos1.login()
-	'Result : Login successfully.'
 
-If there are no problems,this method will return a string message to user.
+If there are no problems,this method will return nothing to user.
 
 By now,you can use configure() and execute configuration commands:
 
 	>>> vyos1.configure()
-	'Result : Active configure mode successfully.'
 
 You can use status() method to get the status of this instance:
 
@@ -115,9 +112,8 @@ Oh,NO!I just forgot the netmask.But you can see,if your input has mistakes,this 
 Now,let's use a correct configuration:
 
 	>>> vyos1.set("interfaces ethernet eth1 address '192.168.10.5/24'")
-	'Result : Configured successfully'
 
-Well,I set address for eth1 now.
+Well,I have set the address for eth1 now.
 
 Let's check the status now:
 
@@ -129,12 +125,10 @@ You can see,"commit" and "save" are "No",so,you must commit and save it.
 Commit:
 
 	>>> vyos1.commit()
-	'Result : Commit successfully.'
 
 Save it:
 
 	>>> vyos1.save()
-	'Result : Save successfully.'
 
 Let's check the status again:
 
@@ -144,9 +138,7 @@ Let's check the status again:
 You see,the value of "commit" and "save" have changed to "Yes",now I can exit the configure mode and logout.But if you don't commit and save,you still can use "vyos1.exit(force=True)" to exit and discard what you have configured:
 
 	>>> vyos1.exit()
-	'Result : Exit configure mode successfully.'
 	>>> vyos1.logout()
-	'Result : Logout successfully.'
 	>>> vyos1.status()
 	{'status': 'logout', 'commit': None, 'save': None, 'configure': None}
 
@@ -181,60 +173,53 @@ I have set two test vms' gateway.Now login vyos1,configure the rip network:
 	>>> from vymgmt.router import Router
 	>>> vyos1 = Router('192.168.225.2','vyos:vyos')
 	>>> vyos1.login()
-	'Result : Login successfully.'
 	>>> vyos1.configure()
-	'Result : Active configure mode successfully.'
 
 First,we should add a new lo address:
 
 	>>> vyos1.set("interfaces loopback lo address 1.1.1.1/32")
-	'Result : Configured successfully'
 
 Then configure rip networks:
 
 	>>> vyos1.set("protocols rip network 192.168.225.0/24")
-	'Result : Configured successfully'
 	>>> vyos1.set("protocols rip network 192.168.10.0/24")
-	'Result : Configured successfully'
 
 And the last step:
 
 	>>> vyos1.set("protocols rip redistribute connected")
-	'Result : Configured successfully'
 
-Sometimes,you may forget to commit or save,the library will return a message and refuse to exit:
+Sometimes,you may forget to commit or save,the library will raise an exception and refuse to exit:
 
 	>>> vyos1.status()
 	{'status': 'login', 'commit': 'No', 'save': 'No', 'configure': 'Yes'}
-	>>> vyos1.exit()
-	'Error : You should commit first.'
+    >>> vyos1.exit()
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+      File "build/bdist.linux-x86_64/egg/vymgmt/router.py", line 233, in exit
+    vymgmt.base_exceptions.base.MaintenanceError: 
+    Error : You should commit first.
 	>>> vyos1.save()
-	'Error : You need to commit first!'
+    Traceback (most recent call last):
+      File "<stdin>", line 1, in <module>
+      File "build/bdist.linux-x86_64/egg/vymgmt/router.py", line 185, in save
+    vymgmt.base_exceptions.base.MaintenanceError: 
+    Error : You need to commit first!
 
 Therefore,we should execute commit() and save():
 
 	>>> vyos1.commit()
-	'Result : Commit successfully.'
 	>>> vyos1.save()
-	'Result : Save successfully.'
 
 Then on vyos2,we can configure rip network:
 
 	>>> vyos2 = Router('192.168.10.6','vyos:vyos')
 	>>> vyos2.login()
-	'Result : Login successfully.'
 	>>> vyos2.configure()
-	'Result : Active configure mode successfully.'
 	>>> vyos2.set("protocols rip network 192.168.10.0/24")
-	'Result : Configured successfully'
 	>>> vyos2.set("protocols rip network 192.168.157.0/24")
-	'Result : Configured successfully'
 	>>> vyos2.set("protocols rip redistribute connected")
-	'Result : Configured successfully'
 	>>> vyos2.commit()
-	'Result : Commit successfully.'
 	>>> vyos2.save()
-	'Result : Save successfully.'
 
 Then check it on test1:
 
@@ -265,15 +250,6 @@ On test3:
 	rtt min/avg/max/mdev = 1.036/1.241/1.381/0.127 ms
 
 Now,maybe you are understand how to use this library to configure VyOS. 
-
-
-
-
-	
-	
-
-	
-
  
 #All Methods
 ##status():
@@ -322,7 +298,7 @@ Basic 'set' method,execute the set command in VyOS.
 Example:  
 config: "interfaces ethernet eth0 description 'eth0'"
 
-The minimal c method.
+The minimal configuration method.
 
 ##delete(config)
 Basic 'delete' method,execute the delete command in VyOS.
@@ -382,6 +358,11 @@ This exception class is for all failures which do not covered by exceptions abov
 
 When this exception raise,the error message from VyOS will displayed. 
 
+##vymgmt.base_exceptions.MaintenanceError()
+
+This exception class is for all maintenance method such login(),logout(),configure() has errors.
+
+When this exception raise,the error message from VyOS will displayed. 
 
 
 
