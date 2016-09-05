@@ -286,6 +286,7 @@ You can use this method to save your configuration.
 
 ##exit(force=False)
 Exit VyOS configure mode.  
+If you not use "force",you can exit without save but you should commit first or it will raise a exception  
 
 Example:  
 force: True or False  

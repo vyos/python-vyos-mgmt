@@ -73,7 +73,7 @@ class Router(object):
                         has_error = 'Type3'
                     else:
                         if self.__status["commit"] == "Yes":
-                            has_error = 'Type2'
+                            has_error = 'Type3'
                         elif self.__status["commit"] is None:
                             has_error = 'Type3'
                         else:
@@ -85,8 +85,8 @@ class Router(object):
 
         if has_error == 'Type1':
             raise MaintenanceError("Error : You should commit and exit configure mode first.")
-        if has_error == 'Type2':
-            raise MaintenanceError("Error : You should save and exit configure mode first.")
+#        if has_error == 'Type2':
+#            raise MaintenanceError("Error : You should save and exit configure mode first.")
         if has_error == 'Type3':
             raise MaintenanceError("Error : You should exit configure mode first.")
         if has_error == 'Type4':
@@ -225,8 +225,12 @@ class Router(object):
                                 self.__status["configure"] = "No"
                                 self.__status["save"] = None
                                 self.__status["commit"] = None
-                            else:
-                                has_error = 'Type1'
+                            elif self.__status["save"] == "No":
+                                self.__conn.sendline("exit")
+                                self.__conn.prompt()
+                                self.__status["configure"] = "No"
+                                self.__status["save"] = None
+                                self.__status["commit"] = None
                         elif self.__status["commit"] is None:
                             self.__conn.sendline("exit")
                             self.__conn.prompt()
@@ -240,8 +244,6 @@ class Router(object):
         except Exception as e:
             return e
 
-        if has_error == 'Type1':
-            raise MaintenanceError("Error : You should save first.")
         if has_error == 'Type2':
             raise MaintenanceError("Error : You should commit first.")
         if has_error == 'Type3':
