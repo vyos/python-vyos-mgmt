@@ -1,342 +1,209 @@
 # Copyright (c) 2016 Hochikong
 
+import re
 
 from pexpect import pxssh
-from .mgmt_common import messenger, committer
-from .base_exceptions.exceptions_for_set_and_delete import ConfigPathError, ConfigValueError
-from .base_exceptions.exceptions_for_commit import CommitFailed, CommitConflict
-from .base_exceptions.base import CommonError, MaintenanceError
-from .error_distinguish import distinguish_for_set, distinguish_for_delete, distinguish_for_commit
+
+
+class VyOSError(Exception):
+    pass
+
+
+class ConfigError(VyOSError):
+    pass
+
+
+class CommitError(ConfigError):
+    pass
+
+
+class ConfigLocked(CommitError):
+    pass
 
 
 class Router(object):
-    def __init__(self, address, cred):
+    def __init__(self, address, user, password):
         """Initial a router object
 
         :param address: Router address,example:'192.168.10.10'
         :param cred: Router user and password,example:'vyos:vyos'
         """
         self.__address = address
-        self.__cred = list(cred)
-        self.__divi = self.__cred.index(":")
-        self.__username = ''.join(self.__cred[:self.__divi])
-        self.__passwd = ''.join(self.__cred[self.__divi+1:])
-        self.__conn = pxssh.pxssh()
-        self.__status = {"status": None, "commit": None, "save": None, "configure": None}
-        self.__basic_string = {0: 'set ', 1: 'delete '}
+        self.__user = user
+        self.__password = password
 
-    def status(self):
+        # Session flags
+        self.__logged_in = False
+        self.__session_modified = False
+        self.__session_saved = True
+        self.__conf_mode = False
+
+        self.__conn = pxssh.pxssh()
+
+        # String codec, hardcoded for now
+        self.__codec = "utf8"
+
+    def __execute_command(self, command):
+        """This method used for sending configuration to VyOS
+
+        :param obj: A connection object
+        :param config: A configuration string
+        :return: A message or an error
+        """
+        self.__conn.sendline(command)
+
+        if not self.__conn.prompt():
+            raise VyOSError("Connection timed out")
+
+        output = self.__conn.before
+
+        # XXX: In python3 it's bytes rather than str
+        if isinstance(output, bytes):
+            output = output.decode(self.__codec)
+        return output
+
+    def _status(self):
         """Check the router object inner status
 
         :return: A python dictionary include the status of the router object
-        """
-        return self.__status
+       	"""
+        return { "logged_in": self.__logged_in,
+                 "session_modified": self.__session_modified,
+                 "session_saved": self.__session_saved,
+                 "conf_mode": self.__conf_mode }
 
     def login(self):
         """Login the router
 
-        :return: A message or an error
         """
-        has_error = None
-        try:
-            if self.__conn.login(self.__address, self.__username, self.__passwd) is True:
-                self.__status["status"] = "login"
-            else:
-                has_error = 'Type1'
-        except Exception as e:
-            return e
-
-        if has_error == 'Type1':
-            raise MaintenanceError("Error : Connect Failed.")
+        self.__conn.login(self.__address, self.__user, self.__password)
+        self.__logged_in = True
 
     def logout(self):
         """Logout the router
 
         :return: A message or an error
         """
-        has_error = None
-        try:
-            if self.__status["status"] == "login":
-                if self.__status["configure"] == "No":
-                    self.__conn.close()
-                    self.__status["status"] = "logout"
-                    self.__status["configure"] = None
-                    self.__conn = pxssh.pxssh()
-                elif self.__status["configure"] is None:
-                    self.__conn.close()
-                    self.__status["status"] = "logout"
-                    self.__conn = pxssh.pxssh()
-                else:
-                    if self.__status["save"] == "Yes":
-                        has_error = 'Type3'
-                    elif self.__status["save"] is None:
-                        has_error = 'Type3'
-                    else:
-                        if self.__status["commit"] == "Yes":
-                            has_error = 'Type3'
-                        elif self.__status["commit"] is None:
-                            has_error = 'Type3'
-                        else:
-                            has_error = 'Type1'
-            else:
-                has_error = 'Type4'
-        except Exception as e:
-            return e
 
-        if has_error == 'Type1':
-            raise MaintenanceError("Error : You should commit and exit configure mode first.")
-#        if has_error == 'Type2':
-#            raise MaintenanceError("Error : You should save and exit configure mode first.")
-        if has_error == 'Type3':
-            raise MaintenanceError("Error : You should exit configure mode first.")
-        if has_error == 'Type4':
-            raise MaintenanceError("Error : Router object not connect to a router.")
+        if not self.__logged_in:
+            raise VyOSError("Not logged in")
+        else:
+            if self.__conf_mode:
+                raise VyOSError("Cannot logout before exiting configuration mode")
+            else:
+                self.__conn.close()
+                self.__logged_in = False
 
     def configure(self):
         """Enter the VyOS configure mode
 
-        :return: A message or an error
         """
-        has_error = None
-        try:
-            if self.__status["status"] == "login":
-                if self.__status["configure"] is not "Yes":
-                    self.__conn.sendline("configure")
-                    self.__conn.prompt(0)
-                    self.__conn.set_unique_prompt()
-                    self.__status["configure"] = "Yes"
-                else:
-                    has_error = 'Type1'
+        if not self.__logged_in:
+            raise VyOSError("Cannot enter configuration mode when not logged in")
+        else:
+            if self.__conf_mode:
+                raise VyOSError("Session is already in configuration mode")
             else:
-                has_error = 'Type2'
-        except Exception as e:
-            return e
+                # configure changes the prompt (from $ to #), so this is
+                # a bit of a special case, and we use pxssh directly instead
+                # of the __execute_command wrapper...
+                self.__conn.sendline("configure")
 
-        if has_error == 'Type1':
-            raise MaintenanceError("Error : In configure mode now!")
-        if has_error == 'Type2':
-            raise MaintenanceError("Error : Router object not connect to a router.")
+                # XXX: set_unique_prompt() after this breaks things, for some reason
+                # We should find out why.
+                self.__conn.PROMPT = "[#$]"
+
+                if not self.__conn.prompt():
+                    raise VyOSError("Entering configure mode failed (possibly due to timeout)")
+
+                #self.__conn.set_unique_prompt()
+                self.__conf_mode = True
+
+                # XXX: There should be a check for operator vs. admin
+                # mode and appropriate exception, but pexpect doesn't work
+                # with operator's overly restricted shell...
 
     def commit(self):
         """Commit the configuration changes
 
-        :return: A message or an error
         """
-        has_error = None
-        result = None
-        res = None
-        try:
-            if self.__status["status"] == "login":
-                if self.__status["configure"] == "Yes":
-                    if self.__status["commit"] is None:
-                        has_error = 'Type1'
-                    if self.__status["commit"] == "No":
-                        res = committer(self.__conn, "commit")
-                        if "Result" in res:
-                            self.__status["commit"] = "Yes"
-                        else:
-                            result = distinguish_for_commit(res)
-                    else:
-                        has_error = 'Type2'
-                else:
-                    has_error = 'Type3'
+        if not self.__conf_mode:
+            raise VyOSError("Cannot commit without entering configuration mode")
+        else:
+            if not self.__session_modified:
+                raise ConfigError("No configuration changes to commit")
             else:
-                has_error = 'Type4'
-        except Exception as e:
-            return e
+                output = self.__execute_command("commit")
 
-        if has_error == 'Type1':
-            raise MaintenanceError("Error : You don't need to commit.")
-        if has_error == 'Type2':
-            raise MaintenanceError("Error : You have commit!")
-        if has_error == 'Type3':
-            raise MaintenanceError("Error : Router not in configure mode!")
-        if has_error == 'Type4':
-            raise MaintenanceError("Error : Router object not connect to a router.")
+                if re.search(r"Commit\s+failed", output):
+                    raise CommitError(output)
+                if re.search(r"another\s+commit\s+in\s+progress", output):
+                    raise ConfigLocked("Configuration is locked due to another commit in progress")
 
-        if result == "CommitFailed":
-            raise CommitFailed(res)
-        elif result == "CommitConflict":
-            raise CommitConflict(res)
+                self.__session_modified = False
+                self.__session_saved = False
 
     def save(self):
         """Save the configuration after commit
 
-        :return: A message or an error
         """
-        has_error = None
-        try:
-            if self.__status["status"] == "login":
-                if self.__status["configure"] == "Yes":
-                    if self.__status["commit"] == "Yes":
-                        if self.__status["save"] is None:
-                            has_error = 'Type1'
-                        if self.__status["save"] == "No":
-                            self.__conn.sendline("save")
-                            self.__conn.prompt(0)
-                            self.__status["save"] = "Yes"
-                        else:
-                            has_error = 'Type2'
-                    elif self.__status["commit"] is None:
-                        has_error = 'Type3'
-                    else:
-                        has_error = 'Type4'
-                else:
-                    has_error = 'Type5'
-            else:
-                has_error = 'Type6'
-        except Exception as e:
-            return e
+        if not self.__conf_mode:
+            raise VyOSError("Cannot save when not in configuration mode")
+        elif self.__session_modified:
+            raise VyOSError("Cannot save when there are uncommited changes")
+        else:
+            self.__execute_command("save")
+            self.__session_saved = True
 
-        if has_error == 'Type1':
-            raise MaintenanceError("Error : You don't need to save.")
-        if has_error == 'Type2':
-            raise MaintenanceError("Error : You have saved!")
-        if has_error == 'Type3':
-            raise MaintenanceError("Error : You don't need to save.")
-        if has_error == 'Type4':
-            raise MaintenanceError("Error : You need to commit first!")
-        if has_error == 'Type5':
-            raise MaintenanceError("Error : Router not in configure mode!")
-        if has_error == 'Type6':
-            raise MaintenanceError("Error : Router object not connect to a router.")
 
     def exit(self, force=False):
         """Exit VyOS configure mode
 
         :param force: True or False
-        :return: A message or an error
         """
-        has_error = None
-        try:
-            if self.__status["status"] == "login":
-                if self.__status["configure"] == "Yes":
-                    if force is True:
-                        self.__conn.sendline("exit discard")
-                        self.__conn.prompt()
-                        self.__status["configure"] = "No"
-                        self.__status["save"] = None
-                        self.__status["commit"] = None
-                    else:
-                        if self.__status["commit"] == "Yes":
-                            if self.__status["save"] == "Yes":
-                                self.__conn.sendline("exit")
-                                self.__conn.prompt()
-                                self.__status["configure"] = "No"
-                                self.__status["save"] = None
-                                self.__status["commit"] = None
-                            elif self.__status["save"] == "No":
-                                self.__conn.sendline("exit")
-                                self.__conn.prompt()
-                                self.__status["configure"] = "No"
-                                self.__status["save"] = None
-                                self.__status["commit"] = None
-                        elif self.__status["commit"] is None:
-                            self.__conn.sendline("exit")
-                            self.__conn.prompt()
-                            self.__status['configure'] = "No"
-                        else:
-                            has_error = 'Type2'
+        if not self.__conf_mode:
+            pass
+        else:
+            # XXX: would be nice to simplify these conditionals
+            if self.__session_modified:
+                if not force:
+                    raise VyOSError("Cannot exit a session with uncommited changes, use force flag to discard")
                 else:
-                    has_error = 'Type3'
+                    self.__execute_command("exit discard")
+                    self.__conf_mode = False
+                    return
+            elif (not self.__session_saved) and (not force):
+                raise VyOSError("Cannot exit a session with unsaved changes, use force flag to ignore")
             else:
-                has_error = 'Type4'
-        except Exception as e:
-            return e
+                self.__execute_command("exit")
+                self.__conf_mode = False
 
-        if has_error == 'Type2':
-            raise MaintenanceError("Error : You should commit first.")
-        if has_error == 'Type3':
-            raise MaintenanceError("Error : You are not in configure mode,no need to exit.")
-        if has_error == 'Type4':
-            raise MaintenanceError("Error : Router object not connect to a router.")
-
-    def set(self, config):
+    def set(self, path):
         """Basic 'set' method,execute the set command in VyOS
 
         :param config: A configuration string.
                        e.g. 'protocols static route ... next-hop ... distance ...'
-        :return: A message or an error
         """
-        has_error = None
-        result = None
-        res = None
-        full_config = self.__basic_string[0] + config
-        try:
-            if self.__status["status"] == "login":
-                if self.__status["configure"] == "Yes":
-                    res = messenger(self.__conn, full_config)
-                    if "Result" in res:
-                        if self.__status["commit"] == "No":
-                            pass
-                        else:
-                            self.__status["commit"] = "No"
-                        if self.__status["save"] == "No":
-                            pass
-                        else:
-                            self.__status["save"] = "No"
-                    else:
-                        result = distinguish_for_set(res)
-                else:
-                    has_error = 'Type1'
-            else:
-                has_error = 'Type2'
-        except Exception as e:
-            return e
+        if not self.__conf_mode:
+            raise ConfigError("Cannot execute set commands when not in configuration mode")
+        else:
+            output = self.__execute_command("{0} {1}". format("set", path))
+            if re.search(r"Set\s+failed", output):
+                raise ConfigError(output)
+            elif re.search(r"already exists", output):
+                raise ConfigError("Configuration path already exists")
+            self.__session_modified = True
 
-        if has_error == 'Type1':
-            raise MaintenanceError("Error : You are not in configure mode.")
-        if has_error == 'Type2':
-            raise MaintenanceError("Error : Router object not connect to a router.")
-
-        if result == "ConfigPathError":
-            raise ConfigPathError(res)
-        elif result == "ConfigValueError":
-            raise ConfigValueError(res)
-        elif result == "NonsupportButError":
-            raise CommonError(res)
-
-    def delete(self, config):
+    def delete(self, path):
         """Basic 'delete' method,execute the delete command in VyOS
 
-        :param config: A configuration string.
+        :param path: A configuration string.
                                e.g. 'protocols static route ... next-hop ... distance ...'
-        :return: A message or an error
         """
-        has_error = None
-        result = None
-        res = None
-        full_config = self.__basic_string[1] + config
-        try:
-            if self.__status["status"] == "login":
-                if self.__status["configure"] == "Yes":
-                    res = messenger(self.__conn, full_config)
-                    if "Result" in res:
-                        if self.__status["commit"] == "No":
-                            pass
-                        else:
-                            self.__status["commit"] = "No"
-                        if self.__status["save"] == "No":
-                            pass
-                        else:
-                            self.__status["save"] = "No"
-                    else:
-                        result = distinguish_for_delete(res)
-                else:
-                    has_error = 'Type1'
-            else:
-                has_error = 'Type2'
-        except Exception as e:
-            return e
-
-        if has_error == 'Type1':
-            raise MaintenanceError("Error : You are not in configure mode.")
-        if has_error == 'Type2':
-            raise MaintenanceError("Error : Router object not connect to a router.")
-
-        if result == "ConfigPathError":
-            raise ConfigPathError(res)
-        elif result == "ConfigValueError":
-            raise ConfigValueError(res)
-        elif result == "NonsupportButError":
-            raise CommonError(res)
+        if not self.__conf_mode:
+            raise ConfigError("Cannot execute delete commands when not in configuration mode")
+        else:
+            output = self.__execute_command("{0} {1}". format("delete", path))
+            if re.search(r"Nothing\s+to\s+delete", output):
+                raise ConfigError(output)
+            self.__session_modified = True
