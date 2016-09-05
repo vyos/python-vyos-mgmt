@@ -56,19 +56,30 @@ class Router(object):
         """
         has_error = None
         try:
-            if self.__status["commit"] == "No":
-                has_error = 'Type1'
-
-            if self.__status["save"] == "No":
-                has_error = 'Type2'
-
-            if self.__status["configure"] == "Yes":
-                has_error = 'Type3'
-
-            self.__conn.close()
-            self.__status["status"] = "logout"
-            self.__status["configure"] = None
-            self.__conn = pxssh.pxssh()
+            if self.__status["status"] == "login":
+                if self.__status["configure"] == "No":
+                    self.__conn.close()
+                    self.__status["status"] = "logout"
+                    self.__status["configure"] = None
+                    self.__conn = pxssh.pxssh()
+                elif self.__status["configure"] is None:
+                    self.__conn.close()
+                    self.__status["status"] = "logout"
+                    self.__conn = pxssh.pxssh()
+                else:
+                    if self.__status["save"] == "Yes":
+                        has_error = 'Type3'
+                    elif self.__status["save"] is None:
+                        has_error = 'Type3'
+                    else:
+                        if self.__status["commit"] == "Yes":
+                            has_error = 'Type2'
+                        elif self.__status["commit"] is None:
+                            has_error = 'Type3'
+                        else:
+                            has_error = 'Type1'
+            else:
+                has_error = 'Type4'
         except Exception as e:
             return e
 
@@ -78,6 +89,8 @@ class Router(object):
             raise MaintenanceError("Error : You should save and exit configure mode first.")
         if has_error == 'Type3':
             raise MaintenanceError("Error : You should exit configure mode first.")
+        if has_error == 'Type4':
+            raise MaintenanceError("Error : Router object not connect to a router.")
 
     def configure(self):
         """Enter the VyOS configure mode
