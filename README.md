@@ -20,11 +20,17 @@ that detect errors and raise appropriate exceptions when an error occurs.
 
 ## API reference
 
-Will be on readthedocs soon.
+...is kept on ReadTheDocs. http://vymgmt.readthedocs.io
 
 ## Installation
 
-Will be on PyPI soon.
+The easiest way is to install from PyPI (https://pypi.python.org/pypi):
+
+```
+pip install vymgmt
+```
+
+Alternatively you can run the setup.py script to install it locally.
 
 ## Usage example
 
