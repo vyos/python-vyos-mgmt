@@ -11,6 +11,11 @@ Contents:
 .. toctree::
    :maxdepth: 2
 
+.. automodule:: vymgmt
+ 
+.. autoclass:: vymgmt.Router
+    :members:
+
 
 
 Indices and tables
