@@ -22,7 +22,7 @@ class ConfigLocked(CommitError):
 
 
 class Router(object):
-    def __init__(self, address, user, password):
+    def __init__(self, address, user, password='', port=22):
         """Initial a router object
 
         :param address: Router address,example:'192.168.10.10'
@@ -32,6 +32,7 @@ class Router(object):
         self.__address = address
         self.__user = user
         self.__password = password
+        self.__port = port
 
         # Session flags
         self.__logged_in = False
@@ -79,7 +80,7 @@ class Router(object):
         # There may or may not be a better way to handle it
         self.__conn = pxssh.pxssh()
 
-        self.__conn.login(self.__address, self.__user, self.__password)
+        self.__conn.login(self.__address, self.__user, password=self.__password, port=self.__port)
         self.__logged_in = True
 
     def logout(self):
@@ -94,6 +95,7 @@ class Router(object):
                 raise VyOSError("Cannot logout before exiting configuration mode")
             else:
                 self.__conn.close()
+                self.__conn = None
                 self.__logged_in = False
 
     def run_op_mode_command(self, command):
