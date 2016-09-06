@@ -31,7 +31,7 @@ Will be on PyPI soon.
 ```
 import vymgmt
 
-vyos = vymgmt.Router('10.217.16.15', 'vyos', password='vyos', port=22)
+vyos = vymgmt.Router('192.0.2.1', 'vyos', password='vyos', port=22)
 
 vyos.login()
 vyos.configure()

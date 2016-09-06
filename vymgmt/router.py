@@ -1,33 +1,50 @@
 # Copyright (c) 2016 Hochikong
 
+"""
+.. module:: vymgmt
+   :platform: Unix
+   :synopsis: Provides a programmatic interface to VyOS router configuration sessions
+
+.. moduleauthor:: VyOS Team <maintainers@vyos.net>, Hochikong
+
+
+"""
+
 import re
 
 from pexpect import pxssh
 
 
 class VyOSError(Exception):
+    """ Raised on general errors """
     pass
 
 
 class ConfigError(VyOSError):
+    """ Raised when an error is found in configuration """
     pass
 
 
 class CommitError(ConfigError):
+    """ Raised on commit failures """
     pass
 
 
 class ConfigLocked(CommitError):
+    """ Raised when commit failes due to another commit in progress """
     pass
 
 
 class Router(object):
+    """ Router configuration interface class
+    """
     def __init__(self, address, user, password='', port=22):
-        """Initial a router object
+        """ Router configuration interface class
 
-        :param address: Router address,example:'192.168.10.10'
+        :param address: Router address,example:'192.0.2.1'
         :param user: Router user
         :param password: Router user's password
+        :param port: SSH port
         """
         self.__address = address
         self.__user = user
@@ -44,9 +61,11 @@ class Router(object):
         self.__codec = "utf8"
 
     def __execute_command(self, command):
-        """This method used for sending configuration to VyOS
+        """ Executed a command on the router
 
         :param command: The configuration command
+        :returns: string -- Command output
+        :raises: VyOSError
         """
         self.__conn.sendline(command)
 
@@ -61,9 +80,9 @@ class Router(object):
         return output
 
     def _status(self):
-        """Check the router object inner status
+        """ Returns the router object status for debugging
 
-        :return: A python dictionary include the status of the router object
+        :returns: dict -- Router object status
         """
         return {"logged_in": self.__logged_in,
                 "session_modified": self.__session_modified,
@@ -71,7 +90,7 @@ class Router(object):
                 "conf_mode": self.__conf_mode}
 
     def login(self):
-        """Login the router
+        """ Logins to the router
 
         """
 
@@ -84,7 +103,9 @@ class Router(object):
         self.__logged_in = True
 
     def logout(self):
-        """Logout the router
+        """ Logouts from the router
+
+        :raises: VyOSError
 
         """
 
@@ -99,10 +120,11 @@ class Router(object):
                 self.__logged_in = False
 
     def run_op_mode_command(self, command):
-        """ Execute a VyOS operational command
+        """ Executes a VyOS operational command
 
-            :param command: VyOS operational command
-            :return: Command output
+        :param command: VyOS operational command
+        :type command: str
+        :returns: string -- Command output
         """
 
         prefix = ""
@@ -113,10 +135,11 @@ class Router(object):
         return self.__execute_command("{0} {1}".format(prefix, command))
 
     def run_conf_mode_command(self, command):
-        """ Execute a VyOS configuration command
+        """ Executes a VyOS configuration command
 
-            :param command: VyOS configuration command
-            :return: Command output
+        :param command: VyOS configuration command
+        :returns: Command output
+        :raises: VyOSError
         """
         if not self.__conf_mode:
             raise VyOSError("Cannot execute configuration mode commands outside of configuration mode")
@@ -124,6 +147,13 @@ class Router(object):
             return self.__execute_command(command)
 
     def configure(self):
+        """ Enters configuration mode on the router
+
+        You cannot use this methods before you log in.
+        You cannot call this method twice, unless you log out and log back in.
+
+        :raises: VyOSError
+        """
         if not self.__logged_in:
             raise VyOSError("Cannot enter configuration mode when not logged in")
         else:
@@ -149,7 +179,11 @@ class Router(object):
                 # with operator's overly restricted shell...
 
     def commit(self):
-        """Commit the configuration changes
+        """Commits configuration changes
+
+        You must call the configure() method before using this one.
+
+        :raises: VyOSError, ConfigError, CommitError, ConfigLocked
 
         """
         if not self.__conf_mode:
@@ -169,8 +203,13 @@ class Router(object):
                 self.__session_saved = False
 
     def save(self):
-        """Save the configuration after commit
+        """Saves the configuration after commit
 
+        You must call the configure() method before using this one.
+        You do not need to make any changes and commit then to use this method.
+        You cannot save if there are uncommited changes.
+
+        :raises: VyOSError
         """
         if not self.__conf_mode:
             raise VyOSError("Cannot save when not in configuration mode")
@@ -181,9 +220,18 @@ class Router(object):
             self.__session_saved = True
 
     def exit(self, force=False):
-        """Exit VyOS configure mode
+        """ Exits configuration mode on the router
 
-        :param force: True or False
+        You must call the configure() method before using this one.
+
+        Unless the force argument is True, it disallows exit when there are unsaved
+        or uncommited changes. Any uncommited changes are discarded on forced exit.
+
+        If the session is not in configuration mode, this method does nothing.
+
+        :param force: Force exit despite uncommited or unsaved changes
+        :type force: bool
+        :raises: VyOSError
         """
         if not self.__conf_mode:
             pass
@@ -203,10 +251,13 @@ class Router(object):
                 self.__conf_mode = False
 
     def set(self, path):
-        """Basic 'set' method,execute the set command in VyOS
+        """ Creates a new configuration node on the router
 
-        :param path: A configuration string.
+        You must call the configure() method before using this one.
+
+        :param path: Configuration node path.
                        e.g. 'protocols static route ... next-hop ... distance ...'
+        :raises: ConfigError
         """
         if not self.__conf_mode:
             raise ConfigError("Cannot execute set commands when not in configuration mode")
@@ -219,10 +270,13 @@ class Router(object):
             self.__session_modified = True
 
     def delete(self, path):
-        """Basic 'delete' method,execute the delete command in VyOS
+        """ Deletes a node from configuration on the router
 
-        :param path: A configuration string.
+        You must call the configure() method before using this one.
+
+        :param path: Configuration node path.
                                e.g. 'protocols static route ... next-hop ... distance ...'
+        :raises: ConfigError
         """
         if not self.__conf_mode:
             raise ConfigError("Cannot execute delete commands when not in configuration mode")
