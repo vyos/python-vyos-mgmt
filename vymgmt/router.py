@@ -39,8 +39,6 @@ class Router(object):
         self.__session_saved = True
         self.__conf_mode = False
 
-        self.__conn = pxssh.pxssh()
-
         # String codec, hardcoded for now
         self.__codec = "utf8"
 
@@ -75,6 +73,12 @@ class Router(object):
         """Login the router
 
         """
+
+        # XXX: after logout, old pxssh instance stops working,
+        # so we create a new one for each login
+        # There may or may not be a better way to handle it
+        self.__conn = pxssh.pxssh()
+
         self.__conn.login(self.__address, self.__user, self.__password)
         self.__logged_in = True
 
@@ -91,7 +95,6 @@ class Router(object):
             else:
                 self.__conn.close()
                 self.__logged_in = False
-                self.__conn = pxssh.pxssh()
 
     def configure(self):
         """Enter the VyOS configure mode
@@ -115,7 +118,6 @@ class Router(object):
                 if not self.__conn.prompt():
                     raise VyOSError("Entering configure mode failed (possibly due to timeout)")
 
-                # self.__conn.set_unique_prompt()
                 self.__conf_mode = True
 
                 # XXX: There should be a check for operator vs. admin
