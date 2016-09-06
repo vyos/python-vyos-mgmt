@@ -79,5 +79,7 @@ be recovered from easily (just wait a bit and retry).
 By default, exit() will not let you exit and will raise a VyOSError is there are uncommited or unsaved changes.
 You can override it with exit(force=True).
 
+## Credits
 
-
+This library was originally written by Hochikong (hochikong@foxmail.com (preferred), or michellehzg@gmail.com),
+and is now maintained by the VyOS project.
