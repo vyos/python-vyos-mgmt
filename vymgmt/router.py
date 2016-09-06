@@ -96,10 +96,32 @@ class Router(object):
                 self.__conn.close()
                 self.__logged_in = False
 
-    def configure(self):
-        """Enter the VyOS configure mode
+    def run_op_mode_command(self, command):
+        """ Execute a VyOS operational command
 
+            :param command: VyOS operational command
+            :return: Command output
         """
+
+        prefix = ""
+        # In cond mode, op mode commands require the "run" prefix
+        if self.__conf_mode:
+            prefix = "run"
+
+        return self.__execute_command("{0} {1}".format(prefix, command))
+
+    def run_conf_mode_command(self, command):
+        """ Execute a VyOS configuration command
+
+            :param command: VyOS configuration command
+            :return: Command output
+        """
+        if not self.__conf_mode:
+            raise VyOSError("Cannot execute configuration mode commands outside of configuration mode")
+        else:
+            return self.__execute_command(command)
+
+    def configure(self):
         if not self.__logged_in:
             raise VyOSError("Cannot enter configuration mode when not logged in")
         else:
