@@ -21,23 +21,31 @@ Use this library to send the configuration commands to VyOS.
 ##Basic Example
 Set a description for eth0:   
 
-    >>> from vymgmt.router import Router
-    >>> vyos = Router('192.168.225.2','vyos:vyos')
-    >>> vyos.login()
-    >>> vyos.configure()
-    >>> vyos.set("interfaces ethernet eth0 description 'eth0'")
-    >>> vyos.status()
-    {'save': 'No', 'status': 'login', 'configure': 'Yes', 'commit': 'No'}
-    >>> vyos.commit()
-    >>> vyos.status()
-    {'save': 'No', 'status': 'login', 'configure': 'Yes', 'commit': 'Yes'}
-    >>> vyos.save()
-    >>> vyos.status()
-    {'save': 'Yes', 'status': 'login', 'configure': 'Yes', 'commit': 'Yes'}
-    >>> vyos.exit()
-    >>> vyos.logout()
-    >>> vyos.status()
-    {'save': None, 'status': 'logout', 'configure': None, 'commit': None}
+    >>> from vymgmt.router  import Router
+	>>> vyos = Router('192.168.225.2','vyos','vyos')
+	>>> vyos.login()
+	>>> vyos.configure()
+	>>> vyos._status()
+	{'session_modified': False, 'logged_in': True, 'session_saved': True, 'conf_mode': True}
+	>>> vyos.set("interfaces ethernet eth0 description 'interface_eth0'")
+	>>> vyos._status()
+	{'session_modified': True, 'logged_in': True, 'session_saved': True, 'conf_mode': True}
+	>>> vyos.logout()
+	Traceback (most recent call last):
+	  File "<stdin>", line 1, in <module>
+	  File "/usr/local/lib/python3.5/dist-packages/vymgmt-0.1-py3.5.egg/vymgmt/router.py", line 90, in logout
+	vymgmt.router.VyOSError: Cannot logout before exiting configuration mode
+	>>> vyos.commit()
+	>>> vyos.exit()
+	Traceback (most recent call last):
+	  File "<stdin>", line 1, in <module>
+	  File "/usr/local/lib/python3.5/dist-packages/vymgmt-0.1-py3.5.egg/vymgmt/router.py", line 174, in exit
+	vymgmt.router.VyOSError: Cannot exit a session with unsaved changes, use force flag to ignore
+	>>> vyos.save()
+	>>> vyos.exit()
+	>>> vyos.logout()
+	>>> vyos._status()
+	{'session_modified': False, 'logged_in': False, 'session_saved': True, 'conf_mode': False}
 
 Because we have save the configuration,so if you reboot the VyOS system but the static router still works.
 
@@ -46,9 +54,7 @@ If you change the configuration,you must commit and save it then you can exit co
 ##Something you should know
 1.Only admin level user can use this library to login and execute all configuration methods.  
 
-2.When you initialize the Router class,the second parameters is 'username:password'.  
-
-3.set() and delete() method is the core function of this library,you can just use a same configuration command on VyOS to set or delete a specify configuration.But you should take a look at the Basic Example and All Methods sections.  
+2.set() and delete() method is the core function of this library,you can just use a same configuration command on VyOS to set or delete a specify configuration.But you should take a look at the Basic Example and All Methods sections.  
 
 #Quick Start
 I will show you how to use this library to configuration the VyOS
@@ -70,7 +76,7 @@ Let's check the interfaces.Well,eth1 is the target interface,and we should set a
 Let's import the Router and initialize a Router instance:
 	
 	>>> from vymgmt.router import Router
-	>>> vyos1 = Router('192.168.225.2','vyos:vyos')
+	>>> vyos1 = Router('192.168.225.2','vyos','vyos')
 
 You should import class Router from vymgmt.router,the use address and "username:password" to initialize the instance.
 
@@ -84,30 +90,30 @@ By now,you can use configure() and execute configuration commands:
 
 	>>> vyos1.configure()
 
-You can use status() method to get the status of this instance:
+You can use _status() method to get the status of this instance:
 
-	>>> vyos1.status()
-	{'status': 'login', 'commit': None, 'save': None, 'configure': 'Yes'}
+	>>> vyos1._status()
+	{'session_modified': False, 'logged_in': True, 'session_saved': True, 'conf_mode': True}
 
-When you just initialize,all values are None.When you login,"status"'s value will change to "login"
-
-But you can see "commit" and "save"'s value are None,because now we just login and enter configure mode.Now,the value of "configure" is "Yes".
+When you login,"logged\_in"'s value will change to True.And now,the value of "conf_mode" is True.
 
 Next,we can use set() to set a address for eth1:
 
 	>>> vyos1.set("interfaces ethernet eth1 address '192.168.10.5'")
 	Traceback (most recent call last):
 	  File "<stdin>", line 1, in <module>
-	  File "build/bdist.linux-x86_64/egg/vymgmt/router.py", line 218, in set
-	vymgmt.base_exception.exceptions_for_set_and_delete.ConfigValueError: 
-	set interfaces ethernet eth1 address '192.168.10.5'
+	  File "/usr/local/lib/python3.5/dist-packages/vymgmt-0.1-py3.5.egg/vymgmt/router.py", line 190, in set
+	vymgmt.router.ConfigError:  set interfaces ethernet eth1 address '192.168.10.5'
 	
 	  Invalid IPv4 address/prefix
-	  
+  
 	  Value validation failed
 	  Set failed
 
-Oh,NO!I just forgot the netmask.But you can see,if your input has mistakes,this library will raise a exception and display the error message to you.Because my configuration lost netmask,therefore the error reason is invalid address.And vymgmt will raise a ConfigValueError.You can see "Exceptions" section to get more information.
+	[edit]
+	vyos@test-vyos
+
+Oh,NO!I just forgot the netmask.But you can see,if your input has mistakes,this library will raise a exception and display the error message to you.Because my configuration lost netmask,therefore the error reason is invalid address.And vymgmt will raise a ConfigError.You can see "Exceptions" section to get more information.
 
 Now,let's use a correct configuration:
 
@@ -117,8 +123,8 @@ Well,I have set the address for eth1 now.
 
 Let's check the status now:
 
-	>>> vyos1.status()
-	{'status': 'login', 'commit': 'No', 'save': 'No', 'configure': 'Yes'}
+	>>> vyos1._status()
+	{'session_modified': True, 'logged_in': True, 'session_saved': True, 'conf_mode': True}
 
 You can see,"commit" and "save" are "No",so,you must commit and save it.
 
@@ -138,9 +144,15 @@ Let's check the status again:
 You see,the value of "commit" and "save" have changed to "Yes",now I can exit the configure mode and logout.But if you don't commit and save,you still can use "vyos1.exit(force=True)" to exit and discard what you have configured:
 
 	>>> vyos1.exit()
+	>>> vyos1._status()
+	{'session_modified': False, 'logged_in': True, 'session_saved': True, 'conf_mode': False}
 	>>> vyos1.logout()
-	>>> vyos1.status()
-	{'status': 'logout', 'commit': None, 'save': None, 'configure': None}
+	>>> vyos1._status()
+	{'session_modified': False, 'logged_in': False, 'session_saved': True, 'conf_mode': False}
+
+But once you want to login again,you don't need to create a new instance,just use the former instance:
+
+	>>> vyos1.login()
 
 Now,I have configured an ethernet interface by this library,let's check it on vyos1:
 
@@ -171,7 +183,7 @@ The address of test1 is 192.168.225.3,and the address of test3 is 192.168.157.8.
 I have set two test vms' gateway.Now login vyos1,configure the rip network:
 
 	>>> from vymgmt.router import Router
-	>>> vyos1 = Router('192.168.225.2','vyos:vyos')
+	>>> vyos1 = Router('192.168.225.2','vyos','vyos')
 	>>> vyos1.login()
 	>>> vyos1.configure()
 
@@ -190,20 +202,18 @@ And the last step:
 
 Sometimes,you may forget to commit or save,the library will raise an exception and refuse to exit:
 
-	>>> vyos1.status()
-	{'status': 'login', 'commit': 'No', 'save': 'No', 'configure': 'Yes'}
-    >>> vyos1.exit()
-    Traceback (most recent call last):
-      File "<stdin>", line 1, in <module>
-      File "build/bdist.linux-x86_64/egg/vymgmt/router.py", line 233, in exit
-    vymgmt.base_exceptions.base.MaintenanceError: 
-    Error : You should commit first.
+	>>> vyos1._status()
+	{'session_modified': True, 'logged_in': True, 'session_saved': True, 'conf_mode': True}
+	>>> vyos1.exit()
+	Traceback (most recent call last):
+	  File "<stdin>", line 1, in <module>
+	  File "/usr/local/lib/python3.5/dist-packages/vymgmt-0.1-py3.5.egg/vymgmt/router.py", line 168, in exit
+	vymgmt.router.VyOSError: Cannot exit a session with uncommited changes, use force flag to discard
 	>>> vyos1.save()
-    Traceback (most recent call last):
-      File "<stdin>", line 1, in <module>
-      File "build/bdist.linux-x86_64/egg/vymgmt/router.py", line 185, in save
-    vymgmt.base_exceptions.base.MaintenanceError: 
-    Error : You need to commit first!
+	Traceback (most recent call last):
+	  File "<stdin>", line 1, in <module>
+	  File "/usr/local/lib/python3.5/dist-packages/vymgmt-0.1-py3.5.egg/vymgmt/router.py", line 152, in save
+	vymgmt.router.VyOSError: Cannot save when there are uncommited changes
 
 Therefore,we should execute commit() and save():
 
@@ -212,7 +222,7 @@ Therefore,we should execute commit() and save():
 
 Then on vyos2,we can configure rip network:
 
-	>>> vyos2 = Router('192.168.10.6','vyos:vyos')
+	>>> vyos2 = Router('192.168.10.6','vyos','vyos')
 	>>> vyos2.login()
 	>>> vyos2.configure()
 	>>> vyos2.set("protocols rip network 192.168.10.0/24")
@@ -252,10 +262,10 @@ On test3:
 Now,maybe you are understand how to use this library to configure VyOS. 
  
 #All Methods
-##status():
+##_status():
 Check the router object inner status.  
 
-Return a dictionary include the status of BasicRouter instance.  
+Return a dictionary include the status of Router instance.  
 
 ##login():
 Login the VyOS system when you have create a new BasicRouter instance.  
@@ -310,61 +320,27 @@ config: "interfaces ethernet eth0 description 'eth0'"
 The minimal configuration method.
 
 #Exceptions
-##vymgmt.base\_exceptions.exceptions\_for\_commit.CommitFailed()
+##vymgmt.router.VyOSError
 
-This exception class is for commit() failures due to some mistakes in your configurations.  
+This exception class is for most obviously configuration mistakes.  
 
 When this exception raise,the error message from VyOS will displayed.
 
-##vymgmt.base\_exceptions.exceptions\_for\_commit.CommitConflict()
+##vymgmt.router.ConfigError
+
+This exception class is for set/delete failures due to user's wrong input.
+
+When this exception raise,the error message from VyOS will displayed.
+
+##vymgmt.router.CommitError
+
+This exception class is for commit failures and commit conflict.
+
+When this exception raise,the error message from VyOS will displayed.
+
+##vymgmt.router.ConfigLocked
 
 This exception class is for commit() failures due to the commit conflicts when more than one users committing their configurations at the same time.
 
 When this exception raise,the error message from VyOS will displayed.
  
-##vymgmt.base\_exceptions.exceptions\_for\_set\_and\_delete.ConfigPathError()
-
-This exception class is for set() and delete() failures due to configuration path error.  
-
-What is configuration path error?
-
-This configuration is correct:
-
-	vyos.set("protocols rip network xxx")
-
-This is wrong:
-
-	vyos.delete("ethernet interface eth1 address")
-
-The wrong one will raise this exception and display the error message:
-
-	Configuration path: [ethernet] is not valid
-  	Delete failed
-
-When this exception raise,the error message from VyOS will displayed.
-
-##vymgmt.base\_exceptions.exceptions\_for\_set\_and\_delete.ConfigValueError()
-
-This exception class is for set() and delete() failures due to value error.  
-
-This exception will raise when your configuration has wrong value,such as:
-
-	vyos.set("interfaces ethernet eth1 address '192.168.225.2")   #No netmask
-
-When this exception raise,the error message from VyOS will displayed.
-
-##vymgmt.base_exceptions.CommonError()
-
-This exception class is for all failures which do not covered by exceptions above.
-
-When this exception raise,the error message from VyOS will displayed. 
-
-##vymgmt.base_exceptions.MaintenanceError()
-
-This exception class is for all maintenance method such login(),logout(),configure() has errors.
-
-When this exception raise,the error message from VyOS will displayed. 
-
-
-
-

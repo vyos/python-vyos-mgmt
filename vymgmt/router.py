@@ -26,7 +26,8 @@ class Router(object):
         """Initial a router object
 
         :param address: Router address,example:'192.168.10.10'
-        :param cred: Router user and password,example:'vyos:vyos'
+        :param user: Router user
+        :param password: Router user's password
         """
         self.__address = address
         self.__user = user
@@ -46,9 +47,7 @@ class Router(object):
     def __execute_command(self, command):
         """This method used for sending configuration to VyOS
 
-        :param obj: A connection object
-        :param config: A configuration string
-        :return: A message or an error
+        :param command: The configuration command
         """
         self.__conn.sendline(command)
 
@@ -66,11 +65,11 @@ class Router(object):
         """Check the router object inner status
 
         :return: A python dictionary include the status of the router object
-       	"""
-        return { "logged_in": self.__logged_in,
-                 "session_modified": self.__session_modified,
-                 "session_saved": self.__session_saved,
-                 "conf_mode": self.__conf_mode }
+        """
+        return {"logged_in": self.__logged_in,
+                "session_modified": self.__session_modified,
+                "session_saved": self.__session_saved,
+                "conf_mode": self.__conf_mode}
 
     def login(self):
         """Login the router
@@ -82,7 +81,6 @@ class Router(object):
     def logout(self):
         """Logout the router
 
-        :return: A message or an error
         """
 
         if not self.__logged_in:
@@ -93,6 +91,7 @@ class Router(object):
             else:
                 self.__conn.close()
                 self.__logged_in = False
+                self.__conn = pxssh.pxssh()
 
     def configure(self):
         """Enter the VyOS configure mode
@@ -116,7 +115,7 @@ class Router(object):
                 if not self.__conn.prompt():
                     raise VyOSError("Entering configure mode failed (possibly due to timeout)")
 
-                #self.__conn.set_unique_prompt()
+                # self.__conn.set_unique_prompt()
                 self.__conf_mode = True
 
                 # XXX: There should be a check for operator vs. admin
@@ -155,7 +154,6 @@ class Router(object):
             self.__execute_command("save")
             self.__session_saved = True
 
-
     def exit(self, force=False):
         """Exit VyOS configure mode
 
@@ -181,7 +179,7 @@ class Router(object):
     def set(self, path):
         """Basic 'set' method,execute the set command in VyOS
 
-        :param config: A configuration string.
+        :param path: A configuration string.
                        e.g. 'protocols static route ... next-hop ... distance ...'
         """
         if not self.__conf_mode:
