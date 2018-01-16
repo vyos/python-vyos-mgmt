@@ -59,18 +59,20 @@ class ConfigLocked(CommitError):
 class Router(object):
     """ Router configuration interface class
     """
-    def __init__(self, address, user, password='', port=22):
+    def __init__(self, address, user, password='', port=22, ssh_key=''):
         """ Router configuration interface class
 
         :param address: Router address,example:'192.0.2.1'
         :param user: Router user
         :param password: Router user's password
         :param port: SSH port
+        :param ssh_key: SSH private key
         """
         self.__address = address
         self.__user = user
         self.__password = password
         self.__port = port
+        self.__ssh_key = ssh_key
 
         # Session flags
         self.__logged_in = False
@@ -120,7 +122,7 @@ class Router(object):
         # There may or may not be a better way to handle it
         self.__conn = pxssh.pxssh()
 
-        self.__conn.login(self.__address, self.__user, password=self.__password, port=self.__port)
+        self.__conn.login(self.__address, self.__user, password=self.__password, port=self.__port, ssh_key=self.__ssh_key)
         self.__logged_in = True
 
     def logout(self):
