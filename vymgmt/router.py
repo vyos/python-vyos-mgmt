@@ -59,7 +59,7 @@ class ConfigLocked(CommitError):
 class Router(object):
     """ Router configuration interface class
     """
-    def __init__(self, address, user, password='', port=22, ssh_key=''):
+    def __init__(self, address, user, password='', port=22, ssh_key='', timeout=30):
         """ Router configuration interface class
 
         :param address: Router address,example:'192.0.2.1'
@@ -67,12 +67,14 @@ class Router(object):
         :param password: Router user's password
         :param port: SSH port
         :param ssh_key: SSH private key
+        :param timeout: Timeout in seconds for the pxssh session to the router
         """
         self.__address = address
         self.__user = user
         self.__password = password
         self.__port = port
         self.__ssh_key = ssh_key
+        self.__timeout = timeout
 
         # Session flags
         self.__logged_in = False
@@ -120,7 +122,7 @@ class Router(object):
         # XXX: after logout, old pxssh instance stops working,
         # so we create a new one for each login
         # There may or may not be a better way to handle it
-        self.__conn = pxssh.pxssh()
+        self.__conn = pxssh.pxssh(self.__timeout)
 
         self.__conn.login(self.__address, self.__user, password=self.__password, port=self.__port, ssh_key=self.__ssh_key)
         self.__logged_in = True
